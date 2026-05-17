@@ -624,18 +624,20 @@ update_service() {
         fi
     fi
     
-    # 获取最新代码（强制使用远程版本）
-    print_info "获取最新代码..."
+    # 获取最新代码（强制使用当前分支的远程版本）
+    local update_branch="${CRS_UPDATE_BRANCH:-$(git branch --show-current 2>/dev/null || echo main)}"
+    update_branch="${update_branch:-main}"
+    print_info "获取最新代码: origin/$update_branch"
     
     # 先获取远程更新
-    if ! git fetch origin main; then
+    if ! git fetch origin "$update_branch"; then
         print_error "获取远程代码失败，请检查网络连接"
         return 1
     fi
     
     # 强制重置到远程版本
     print_info "应用远程更新..."
-    if ! git reset --hard origin/main; then
+    if ! git reset --hard "origin/$update_branch"; then
         print_error "重置到远程版本失败"
         # 尝试恢复
         print_info "尝试恢复..."
@@ -666,10 +668,7 @@ update_service() {
     # 清理旧的前端文件（保留用户自定义文件）
     if [ -d "web/admin-spa/dist" ]; then
         print_info "清理旧的前端文件..."
-        # 只删除已知的前端文件，保留用户可能添加的自定义文件
-        rm -rf web/admin-spa/dist/assets 2>/dev/null
-        rm -f web/admin-spa/dist/index.html 2>/dev/null
-        rm -f web/admin-spa/dist/favicon.ico 2>/dev/null
+        find web/admin-spa/dist -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null
     fi
     
     # 从 web-dist 分支获取构建好的文件
@@ -689,17 +688,16 @@ update_service() {
         local clone_success=false
         for attempt in 1 2 3; do
             print_info "尝试下载前端文件 (第 $attempt 次)..."
-            
-            if git clone --depth 1 --branch web-dist --single-branch \
-                https://github.com/luokyme/claude-relay-service.git \
-                "$TEMP_CLONE_DIR" 2>/dev/null; then
+
+            REPO_URL=$(git config --get remote.origin.url)
+            if git clone --depth 1 --branch web-dist --single-branch "$REPO_URL" "$TEMP_CLONE_DIR" 2>/dev/null; then
                 clone_success=true
                 break
             fi
-            
-            # 如果 HTTPS 失败，尝试使用当前仓库的 remote URL
-            REPO_URL=$(git config --get remote.origin.url)
-            if git clone --depth 1 --branch web-dist --single-branch "$REPO_URL" "$TEMP_CLONE_DIR" 2>/dev/null; then
+
+            if git clone --depth 1 --branch web-dist --single-branch \
+                https://github.com/luokyme/claude-relay-service.git \
+                "$TEMP_CLONE_DIR" 2>/dev/null; then
                 clone_success=true
                 break
             fi

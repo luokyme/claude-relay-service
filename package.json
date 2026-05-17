@@ -7,6 +7,7 @@
     "start": "npm run lint && node src/app.js",
     "dev": "nodemon",
     "build:web": "cd web/admin-spa && npm run build",
+    "publish:web-dist": "bash scripts/publish-web-dist.sh",
     "install:web": "cd web/admin-spa && npm install",
     "update:pricing": "node scripts/update-model-pricing.js",
     "setup": "node scripts/setup.js",
