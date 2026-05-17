@@ -334,6 +334,12 @@
                       标签
                     </th>
                     <th
+                      class="min-w-[130px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                      title="控制 OpenAI Responses 请求是否移除 service_tier 字段"
+                    >
+                      Fast/Priority
+                    </th>
+                    <th
                       class="min-w-[80px] cursor-pointer px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600"
                       @click="sortApiKeys('status')"
                     >
@@ -596,6 +602,49 @@
                             >无标签</span
                           >
                         </div>
+                      </td>
+                      <!-- Fast/Priority service_tier 开关 -->
+                      <td class="whitespace-nowrap px-3 py-3">
+                        <button
+                          :aria-pressed="shouldRemoveServiceTier(key)"
+                          :class="[
+                            shouldRemoveServiceTier(key)
+                              ? 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800/70 dark:bg-rose-900/30 dark:text-rose-300'
+                              : 'border-gray-200 bg-gray-50 text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300',
+                            'inline-flex items-center gap-2 rounded-full border px-2.5 py-1.5 text-xs font-medium transition-colors hover:bg-opacity-80 disabled:cursor-not-allowed disabled:opacity-60'
+                          ]"
+                          :disabled="isServiceTierRemoveUpdating(key.id)"
+                          :title="
+                            shouldRemoveServiceTier(key)
+                              ? '当前会移除 service_tier，点击切换为默认'
+                              : '当前保留 service_tier，点击切换为移除 Fast/Priority'
+                          "
+                          type="button"
+                          @click="toggleServiceTierRemove(key)"
+                        >
+                          <span
+                            :class="[
+                              shouldRemoveServiceTier(key)
+                                ? 'bg-rose-500'
+                                : 'bg-gray-300 dark:bg-gray-600',
+                              'relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors'
+                            ]"
+                          >
+                            <span
+                              :class="[
+                                shouldRemoveServiceTier(key) ? 'translate-x-4' : 'translate-x-0',
+                                'absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform'
+                              ]"
+                            />
+                          </span>
+                          <span>
+                            {{ shouldRemoveServiceTier(key) ? '移除' : '默认' }}
+                          </span>
+                          <i
+                            v-if="isServiceTierRemoveUpdating(key.id)"
+                            class="fas fa-spinner fa-spin text-[10px]"
+                          />
+                        </button>
                       </td>
                       <td class="whitespace-nowrap px-3 py-3">
                         <span
@@ -5000,7 +5049,7 @@ onUnmounted(() => {
 
 /* 防止表格内容溢出，保证横向滚动 */
 .table-container table {
-  min-width: 1320px;
+  min-width: 1450px;
   border-collapse: collapse;
   table-layout: auto;
 }
