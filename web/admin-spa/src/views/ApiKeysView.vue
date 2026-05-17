@@ -288,7 +288,7 @@
           <!-- 桌面端表格视图 -->
           <div v-else class="table-wrapper hidden md:block">
             <div class="table-container">
-              <table class="w-full">
+              <table class="api-keys-table w-full">
                 <thead
                   class="sticky top-0 z-10 bg-gradient-to-b from-gray-50 to-gray-100/90 backdrop-blur-sm dark:from-gray-700 dark:to-gray-800/90"
                 >
@@ -1021,35 +1021,6 @@
                             <span class="ml-1">{{ key.isActive ? '禁用' : '激活' }}</span>
                           </button>
                           <button
-                            :class="[
-                              shouldRemoveServiceTier(key)
-                                ? 'bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-900/30 dark:text-rose-300 dark:hover:bg-rose-900/50'
-                                : 'bg-gray-50 text-gray-600 hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600',
-                              'rounded px-2 py-1 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60'
-                            ]"
-                            :disabled="isServiceTierRemoveUpdating(key.id)"
-                            :title="
-                              shouldRemoveServiceTier(key)
-                                ? '切换为默认，不移除 service_tier'
-                                : '移除 service_tier 字段'
-                            "
-                            @click="toggleServiceTierRemove(key)"
-                          >
-                            <i
-                              :class="[
-                                'fas',
-                                isServiceTierRemoveUpdating(key.id)
-                                  ? 'fa-spinner fa-spin'
-                                  : shouldRemoveServiceTier(key)
-                                    ? 'fa-eraser'
-                                    : 'fa-sliders-h'
-                              ]"
-                            />
-                            <span class="ml-1">
-                              {{ shouldRemoveServiceTier(key) ? '移除' : '默认' }}
-                            </span>
-                          </button>
-                          <button
                             class="rounded px-2 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 hover:text-red-900 dark:hover:bg-red-900/20"
                             title="删除"
                             @click="deleteApiKey(key.id)"
@@ -1078,32 +1049,6 @@
                               :class="[
                                 'fas',
                                 expandedApiKeys[key.id] ? 'fa-chevron-up' : 'fa-chevron-down'
-                              ]"
-                            />
-                          </button>
-                          <button
-                            :class="[
-                              shouldRemoveServiceTier(key)
-                                ? 'text-rose-600 hover:bg-rose-50 hover:text-rose-900 dark:hover:bg-rose-900/20'
-                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700',
-                              'rounded px-2 py-1 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60'
-                            ]"
-                            :disabled="isServiceTierRemoveUpdating(key.id)"
-                            :title="
-                              shouldRemoveServiceTier(key)
-                                ? '移除 service_tier'
-                                : '默认 service_tier'
-                            "
-                            @click="toggleServiceTierRemove(key)"
-                          >
-                            <i
-                              :class="[
-                                'fas',
-                                isServiceTierRemoveUpdating(key.id)
-                                  ? 'fa-spinner fa-spin'
-                                  : shouldRemoveServiceTier(key)
-                                    ? 'fa-eraser'
-                                    : 'fa-sliders-h'
                               ]"
                             />
                           </button>
@@ -1781,34 +1726,6 @@
                   {{ key.isActive ? '禁用' : '激活' }}
                 </button>
                 <button
-                  :class="[
-                    shouldRemoveServiceTier(key)
-                      ? 'bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-900/30 dark:hover:bg-rose-900/50'
-                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600',
-                    'rounded-lg px-3 py-1.5 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-60'
-                  ]"
-                  :disabled="isServiceTierRemoveUpdating(key.id)"
-                  :title="
-                    shouldRemoveServiceTier(key)
-                      ? '切换为默认，不移除 service_tier'
-                      : '移除 service_tier 字段'
-                  "
-                  @click="toggleServiceTierRemove(key)"
-                >
-                  <i
-                    :class="[
-                      'fas',
-                      isServiceTierRemoveUpdating(key.id)
-                        ? 'fa-spinner fa-spin'
-                        : shouldRemoveServiceTier(key)
-                          ? 'fa-eraser'
-                          : 'fa-sliders-h',
-                      'mr-1'
-                    ]"
-                  />
-                  {{ shouldRemoveServiceTier(key) ? '移除' : '默认' }}
-                </button>
-                <button
                   class="rounded-lg bg-red-50 px-3 py-1.5 text-xs text-red-600 transition-colors hover:bg-red-100 dark:bg-red-900/30 dark:hover:bg-red-900/50"
                   @click="deleteApiKey(key.id)"
                 >
@@ -1942,7 +1859,7 @@
 
             <div class="table-wrapper">
               <div class="table-container">
-                <table class="w-full">
+                <table class="api-keys-table w-full">
                   <thead
                     class="sticky top-0 z-10 bg-gradient-to-b from-gray-50 to-gray-100/90 backdrop-blur-sm dark:from-gray-700 dark:to-gray-800/90"
                   >
@@ -5047,11 +4964,31 @@ onUnmounted(() => {
   -webkit-overflow-scrolling: touch;
 }
 
-/* 防止表格内容溢出，保证横向滚动 */
 .table-container table {
-  min-width: 1450px;
   border-collapse: collapse;
   table-layout: auto;
+}
+
+/* API Keys 表格列宽按内容自动计算，超出容器时保留横向滚动 */
+.api-keys-table {
+  width: max-content;
+  min-width: 100%;
+}
+
+.api-keys-table th,
+.api-keys-table td {
+  width: auto;
+  min-width: auto !important;
+}
+
+.api-keys-table .checkbox-column {
+  width: 50px;
+  min-width: 50px !important;
+}
+
+.api-keys-table .operations-column {
+  width: 1%;
+  white-space: nowrap;
 }
 
 .table-container::-webkit-scrollbar {
