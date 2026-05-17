@@ -348,6 +348,14 @@ const handleResponses = async (req, res) => {
         )
         logger.info('🧩 Standard Responses request applied API key payload rules')
       }
+
+      if (
+        apiKeyData.removeOpenAIResponsesServiceTier === true &&
+        req.body?.service_tier !== undefined
+      ) {
+        delete req.body.service_tier
+        logger.info('🧹 Standard Responses request removed service_tier by API key setting')
+      }
     } else {
       normalizeGpt5ModelForCodex(req.body)
 

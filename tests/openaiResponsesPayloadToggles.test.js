@@ -128,6 +128,7 @@ function createReq({
       permissions: ['openai'],
       enableOpenAIResponsesCodexAdaptation: true,
       enableOpenAIResponsesPayloadRules: false,
+      removeOpenAIResponsesServiceTier: false,
       openaiResponsesPayloadRules: [],
       ...apiKeyOverrides
     },
@@ -299,6 +300,31 @@ describe('openai responses payload toggles', () => {
       req.apiKey,
       createHash('rule-key'),
       'gpt-5-codex'
+    )
+  })
+
+  test('removes service_tier when the API key service tier removal toggle is on', async () => {
+    const req = createReq({
+      body: {
+        model: 'gpt-5',
+        prompt_cache_key: 'remove-service-tier-key',
+        service_tier: 'priority',
+        stream: false
+      },
+      apiKeyOverrides: {
+        enableOpenAIResponsesCodexAdaptation: false,
+        removeOpenAIResponsesServiceTier: true
+      }
+    })
+
+    await openaiRoutes.handleResponses(req, createRes())
+
+    expect(req.body.service_tier).toBeUndefined()
+    expect(req._serviceTier).toBeNull()
+    expect(unifiedOpenAIScheduler.selectAccountForApiKey).toHaveBeenCalledWith(
+      req.apiKey,
+      createHash('remove-service-tier-key'),
+      'gpt-5'
     )
   })
 

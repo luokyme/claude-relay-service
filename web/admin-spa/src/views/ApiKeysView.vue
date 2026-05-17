@@ -308,7 +308,7 @@
                       </div>
                     </th>
                     <th
-                      class="name-column sticky z-20 min-w-[140px] cursor-pointer px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600"
+                      class="name-column sticky z-20 min-w-[110px] cursor-pointer px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600"
                       :class="shouldShowCheckboxes ? 'left-[50px]' : 'left-0'"
                       @click="sortApiKeys('name')"
                     >
@@ -324,12 +324,12 @@
                       <i v-else class="fas fa-sort ml-1 text-gray-400" />
                     </th>
                     <th
-                      class="min-w-[140px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                      class="min-w-[110px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                     >
                       所属账号
                     </th>
                     <th
-                      class="min-w-[100px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                      class="min-w-[80px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                     >
                       标签
                     </th>
@@ -972,6 +972,35 @@
                             <span class="ml-1">{{ key.isActive ? '禁用' : '激活' }}</span>
                           </button>
                           <button
+                            :class="[
+                              shouldRemoveServiceTier(key)
+                                ? 'bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-900/30 dark:text-rose-300 dark:hover:bg-rose-900/50'
+                                : 'bg-gray-50 text-gray-600 hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600',
+                              'rounded px-2 py-1 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60'
+                            ]"
+                            :disabled="isServiceTierRemoveUpdating(key.id)"
+                            :title="
+                              shouldRemoveServiceTier(key)
+                                ? '切换为默认，不移除 service_tier'
+                                : '移除 service_tier 字段'
+                            "
+                            @click="toggleServiceTierRemove(key)"
+                          >
+                            <i
+                              :class="[
+                                'fas',
+                                isServiceTierRemoveUpdating(key.id)
+                                  ? 'fa-spinner fa-spin'
+                                  : shouldRemoveServiceTier(key)
+                                    ? 'fa-eraser'
+                                    : 'fa-sliders-h'
+                              ]"
+                            />
+                            <span class="ml-1">
+                              {{ shouldRemoveServiceTier(key) ? '移除' : '默认' }}
+                            </span>
+                          </button>
+                          <button
                             class="rounded px-2 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 hover:text-red-900 dark:hover:bg-red-900/20"
                             title="删除"
                             @click="deleteApiKey(key.id)"
@@ -1000,6 +1029,32 @@
                               :class="[
                                 'fas',
                                 expandedApiKeys[key.id] ? 'fa-chevron-up' : 'fa-chevron-down'
+                              ]"
+                            />
+                          </button>
+                          <button
+                            :class="[
+                              shouldRemoveServiceTier(key)
+                                ? 'text-rose-600 hover:bg-rose-50 hover:text-rose-900 dark:hover:bg-rose-900/20'
+                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700',
+                              'rounded px-2 py-1 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60'
+                            ]"
+                            :disabled="isServiceTierRemoveUpdating(key.id)"
+                            :title="
+                              shouldRemoveServiceTier(key)
+                                ? '移除 service_tier'
+                                : '默认 service_tier'
+                            "
+                            @click="toggleServiceTierRemove(key)"
+                          >
+                            <i
+                              :class="[
+                                'fas',
+                                isServiceTierRemoveUpdating(key.id)
+                                  ? 'fa-spinner fa-spin'
+                                  : shouldRemoveServiceTier(key)
+                                    ? 'fa-eraser'
+                                    : 'fa-sliders-h'
                               ]"
                             />
                           </button>
@@ -1677,6 +1732,34 @@
                   {{ key.isActive ? '禁用' : '激活' }}
                 </button>
                 <button
+                  :class="[
+                    shouldRemoveServiceTier(key)
+                      ? 'bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-900/30 dark:hover:bg-rose-900/50'
+                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600',
+                    'rounded-lg px-3 py-1.5 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-60'
+                  ]"
+                  :disabled="isServiceTierRemoveUpdating(key.id)"
+                  :title="
+                    shouldRemoveServiceTier(key)
+                      ? '切换为默认，不移除 service_tier'
+                      : '移除 service_tier 字段'
+                  "
+                  @click="toggleServiceTierRemove(key)"
+                >
+                  <i
+                    :class="[
+                      'fas',
+                      isServiceTierRemoveUpdating(key.id)
+                        ? 'fa-spinner fa-spin'
+                        : shouldRemoveServiceTier(key)
+                          ? 'fa-eraser'
+                          : 'fa-sliders-h',
+                      'mr-1'
+                    ]"
+                  />
+                  {{ shouldRemoveServiceTier(key) ? '移除' : '默认' }}
+                </button>
+                <button
                   class="rounded-lg bg-red-50 px-3 py-1.5 text-xs text-red-600 transition-colors hover:bg-red-100 dark:bg-red-900/30 dark:hover:bg-red-900/50"
                   @click="deleteApiKey(key.id)"
                 >
@@ -1816,12 +1899,12 @@
                   >
                     <tr>
                       <th
-                        class="name-column sticky left-0 z-20 min-w-[140px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                        class="name-column sticky left-0 z-20 min-w-[110px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                       >
                         名称
                       </th>
                       <th
-                        class="min-w-[140px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                        class="min-w-[110px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                       >
                         所属账号
                       </th>
@@ -2202,6 +2285,7 @@ const isIndeterminate = ref(false)
 const showCheckboxes = ref(false)
 const apiKeysLoading = ref(false)
 const apiKeyStatsTimeRange = ref('today')
+const serviceTierRemoveUpdatingIds = ref(new Set())
 
 // 全局日期筛选器
 const globalDateFilter = reactive({
@@ -3916,6 +4000,49 @@ const getApiKeyActions = (key) => {
   return actions
 }
 
+const shouldRemoveServiceTier = (key) =>
+  key?.removeOpenAIResponsesServiceTier === true || key?.removeOpenAIResponsesServiceTier === 'true'
+
+const isServiceTierRemoveUpdating = (keyId) => serviceTierRemoveUpdatingIds.value.has(keyId)
+
+const setServiceTierRemoveUpdating = (keyId, updating) => {
+  const nextIds = new Set(serviceTierRemoveUpdatingIds.value)
+  if (updating) {
+    nextIds.add(keyId)
+  } else {
+    nextIds.delete(keyId)
+  }
+  serviceTierRemoveUpdatingIds.value = nextIds
+}
+
+const toggleServiceTierRemove = async (key) => {
+  if (!key?.id || isServiceTierRemoveUpdating(key.id)) return
+
+  const currentlyRemoving = shouldRemoveServiceTier(key)
+  const nextRemoveServiceTier = !currentlyRemoving
+
+  setServiceTierRemoveUpdating(key.id, true)
+  try {
+    const data = await httpApis.updateApiKeyApi(key.id, {
+      removeOpenAIResponsesServiceTier: nextRemoveServiceTier
+    })
+
+    if (data.success) {
+      const localKey = apiKeys.value.find((item) => item.id === key.id)
+      if (localKey) {
+        localKey.removeOpenAIResponsesServiceTier = nextRemoveServiceTier
+      }
+      showToast(`service_tier 字段已切换为${currentlyRemoving ? '默认' : '移除'}`, 'success')
+    } else {
+      showToast(data.message || '操作失败', 'error')
+    }
+  } catch (error) {
+    showToast('操作失败', 'error')
+  } finally {
+    setServiceTierRemoveUpdating(key.id, false)
+  }
+}
+
 // 切换API Key状态（激活/禁用）
 const toggleApiKeyStatus = async (key) => {
   let confirmed = true
@@ -4873,7 +5000,7 @@ onUnmounted(() => {
 
 /* 防止表格内容溢出，保证横向滚动 */
 .table-container table {
-  min-width: 1400px;
+  min-width: 1320px;
   border-collapse: collapse;
   table-layout: auto;
 }

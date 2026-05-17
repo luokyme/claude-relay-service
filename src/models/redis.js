@@ -779,6 +779,7 @@ class RedisClient {
       'enableClientRestriction',
       'enableOpenAIResponsesCodexAdaptation',
       'enableOpenAIResponsesPayloadRules',
+      'removeOpenAIResponsesServiceTier',
       'isDeleted'
     ]
     for (const field of boolFields) {
@@ -792,6 +793,9 @@ class RedisClient {
     }
     if (parsed.enableOpenAIResponsesPayloadRules === undefined) {
       parsed.enableOpenAIResponsesPayloadRules = false
+    }
+    if (parsed.removeOpenAIResponsesServiceTier === undefined) {
+      parsed.removeOpenAIResponsesServiceTier = false
     }
 
     // 数字字段

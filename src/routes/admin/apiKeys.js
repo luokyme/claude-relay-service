@@ -1497,6 +1497,7 @@ router.post('/api-keys', authenticateAdmin, async (req, res) => {
       weeklyResetHour, // 周费用重置时 (0-23)
       enableOpenAIResponsesCodexAdaptation,
       enableOpenAIResponsesPayloadRules,
+      removeOpenAIResponsesServiceTier,
       openaiResponsesPayloadRules
     } = req.body
 
@@ -1646,6 +1647,13 @@ router.post('/api-keys', authenticateAdmin, async (req, res) => {
       return res.status(400).json({ error: 'enableOpenAIResponsesPayloadRules must be a boolean' })
     }
 
+    if (
+      removeOpenAIResponsesServiceTier !== undefined &&
+      typeof removeOpenAIResponsesServiceTier !== 'boolean'
+    ) {
+      return res.status(400).json({ error: 'removeOpenAIResponsesServiceTier must be a boolean' })
+    }
+
     const payloadRulesValidation = requestBodyRuleService.validateAndNormalizeRules(
       openaiResponsesPayloadRules
     )
@@ -1712,6 +1720,8 @@ router.post('/api-keys', authenticateAdmin, async (req, res) => {
           : true,
       enableOpenAIResponsesPayloadRules:
         enableOpenAIResponsesPayloadRules !== undefined ? enableOpenAIResponsesPayloadRules : false,
+      removeOpenAIResponsesServiceTier:
+        removeOpenAIResponsesServiceTier !== undefined ? removeOpenAIResponsesServiceTier : false,
       openaiResponsesPayloadRules: payloadRulesValidation.rules
     })
 
@@ -2124,6 +2134,7 @@ router.put('/api-keys/:keyId', authenticateAdmin, async (req, res) => {
       weeklyResetHour, // 周费用重置时 (0-23)
       enableOpenAIResponsesCodexAdaptation,
       enableOpenAIResponsesPayloadRules,
+      removeOpenAIResponsesServiceTier,
       openaiResponsesPayloadRules
     } = req.body
 
@@ -2335,6 +2346,13 @@ router.put('/api-keys/:keyId', authenticateAdmin, async (req, res) => {
           .json({ error: 'enableOpenAIResponsesPayloadRules must be a boolean' })
       }
       updates.enableOpenAIResponsesPayloadRules = enableOpenAIResponsesPayloadRules
+    }
+
+    if (removeOpenAIResponsesServiceTier !== undefined) {
+      if (typeof removeOpenAIResponsesServiceTier !== 'boolean') {
+        return res.status(400).json({ error: 'removeOpenAIResponsesServiceTier must be a boolean' })
+      }
+      updates.removeOpenAIResponsesServiceTier = removeOpenAIResponsesServiceTier
     }
 
     if (openaiResponsesPayloadRules !== undefined) {

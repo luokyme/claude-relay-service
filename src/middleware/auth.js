@@ -1319,6 +1319,7 @@ const authenticateApiKey = async (req, res, next) => {
       totalCost: validation.keyData.totalCost,
       enableOpenAIResponsesCodexAdaptation: validation.keyData.enableOpenAIResponsesCodexAdaptation,
       enableOpenAIResponsesPayloadRules: validation.keyData.enableOpenAIResponsesPayloadRules,
+      removeOpenAIResponsesServiceTier: validation.keyData.removeOpenAIResponsesServiceTier,
       openaiResponsesPayloadRules: validation.keyData.openaiResponsesPayloadRules
     }
 
