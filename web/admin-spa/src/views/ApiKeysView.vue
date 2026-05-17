@@ -288,14 +288,14 @@
           <!-- 桌面端表格视图 -->
           <div v-else class="table-wrapper hidden md:block">
             <div class="table-container">
-              <table class="api-keys-table w-full">
+              <table class="w-full">
                 <thead
                   class="sticky top-0 z-10 bg-gradient-to-b from-gray-50 to-gray-100/90 backdrop-blur-sm dark:from-gray-700 dark:to-gray-800/90"
                 >
                   <tr>
                     <th
                       v-if="shouldShowCheckboxes"
-                      class="checkbox-column sticky left-0 z-20 min-w-[50px] px-3 py-4 text-left"
+                      class="checkbox-column sticky left-0 z-20 w-[50px] px-3 py-4 text-left"
                     >
                       <div class="flex items-center">
                         <input
@@ -308,7 +308,7 @@
                       </div>
                     </th>
                     <th
-                      class="name-column sticky z-20 min-w-[110px] cursor-pointer px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600"
+                      class="name-column sticky z-20 cursor-pointer px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600"
                       :class="shouldShowCheckboxes ? 'left-[50px]' : 'left-0'"
                       @click="sortApiKeys('name')"
                     >
@@ -324,23 +324,23 @@
                       <i v-else class="fas fa-sort ml-1 text-gray-400" />
                     </th>
                     <th
-                      class="min-w-[110px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                      class="px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                     >
                       所属账号
                     </th>
                     <th
-                      class="min-w-[80px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                      class="px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                     >
                       标签
                     </th>
                     <th
-                      class="min-w-[130px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                      class="px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                       title="控制 OpenAI Responses 请求是否移除 service_tier 字段"
                     >
                       Fast/Priority
                     </th>
                     <th
-                      class="min-w-[80px] cursor-pointer px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600"
+                      class="cursor-pointer px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600"
                       @click="sortApiKeys('status')"
                     >
                       状态
@@ -355,7 +355,7 @@
                       <i v-else class="fas fa-sort ml-1 text-gray-400" />
                     </th>
                     <th
-                      class="min-w-[70px] px-3 py-4 text-right text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                      class="px-3 py-4 text-right text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                       :class="{
                         'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600': canSortByCost,
                         'cursor-not-allowed opacity-60': !canSortByCost
@@ -376,22 +376,22 @@
                       <i v-else class="fas fa-clock ml-1 text-gray-400" title="索引更新中" />
                     </th>
                     <th
-                      class="min-w-[180px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                      class="px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                     >
                       限制
                     </th>
                     <th
-                      class="min-w-[80px] px-3 py-4 text-right text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                      class="px-3 py-4 text-right text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                     >
                       Token
                     </th>
                     <th
-                      class="min-w-[80px] px-3 py-4 text-right text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                      class="px-3 py-4 text-right text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                     >
                       请求数
                     </th>
                     <th
-                      class="min-w-[100px] cursor-pointer px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600"
+                      class="cursor-pointer px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600"
                       @click="sortApiKeys('lastUsedAt')"
                     >
                       最后使用
@@ -406,7 +406,7 @@
                       <i v-else class="fas fa-sort ml-1 text-gray-400" />
                     </th>
                     <th
-                      class="min-w-[100px] cursor-pointer px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600"
+                      class="cursor-pointer px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600"
                       @click="sortApiKeys('createdAt')"
                     >
                       创建时间
@@ -421,7 +421,7 @@
                       <i v-else class="fas fa-sort ml-1 text-gray-400" />
                     </th>
                     <th
-                      class="min-w-[100px] cursor-pointer px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600"
+                      class="cursor-pointer px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600"
                       @click="sortApiKeys('expiresAt')"
                     >
                       过期时间
@@ -436,7 +436,7 @@
                       <i v-else class="fas fa-sort ml-1 text-gray-400" />
                     </th>
                     <th
-                      class="operations-column sticky right-0 min-w-[120px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                      class="operations-column sticky right-0 whitespace-nowrap px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                     >
                       操作
                     </th>
@@ -1859,64 +1859,64 @@
 
             <div class="table-wrapper">
               <div class="table-container">
-                <table class="api-keys-table w-full">
+                <table class="w-full">
                   <thead
                     class="sticky top-0 z-10 bg-gradient-to-b from-gray-50 to-gray-100/90 backdrop-blur-sm dark:from-gray-700 dark:to-gray-800/90"
                   >
                     <tr>
                       <th
-                        class="name-column sticky left-0 z-20 min-w-[110px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                        class="name-column sticky left-0 z-20 px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                       >
                         名称
                       </th>
                       <th
-                        class="min-w-[110px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                        class="px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                       >
                         所属账号
                       </th>
                       <th
                         v-if="isLdapEnabled"
-                        class="min-w-[120px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                        class="px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                       >
                         创建者
                       </th>
                       <th
-                        class="min-w-[120px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                        class="px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                       >
                         创建时间
                       </th>
                       <th
-                        class="min-w-[100px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                        class="px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                       >
                         删除者
                       </th>
                       <th
-                        class="min-w-[100px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                        class="px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                       >
                         删除时间
                       </th>
                       <th
-                        class="min-w-[70px] px-3 py-4 text-right text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                        class="px-3 py-4 text-right text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                       >
                         费用
                       </th>
                       <th
-                        class="min-w-[80px] px-3 py-4 text-right text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                        class="px-3 py-4 text-right text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                       >
                         Token
                       </th>
                       <th
-                        class="min-w-[80px] px-3 py-4 text-right text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                        class="px-3 py-4 text-right text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                       >
                         请求数
                       </th>
                       <th
-                        class="min-w-[100px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                        class="px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                       >
                         最后使用
                       </th>
                       <th
-                        class="operations-column sticky right-0 min-w-[140px] px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
+                        class="operations-column sticky right-0 whitespace-nowrap px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
                       >
                         操作
                       </th>
@@ -4965,30 +4965,9 @@ onUnmounted(() => {
 }
 
 .table-container table {
+  min-width: 100%;
   border-collapse: collapse;
   table-layout: auto;
-}
-
-/* API Keys 表格列宽按内容自动计算，超出容器时保留横向滚动 */
-.api-keys-table {
-  width: max-content;
-  min-width: 100%;
-}
-
-.api-keys-table th,
-.api-keys-table td {
-  width: auto;
-  min-width: auto !important;
-}
-
-.api-keys-table .checkbox-column {
-  width: 50px;
-  min-width: 50px !important;
-}
-
-.api-keys-table .operations-column {
-  width: 1%;
-  white-space: nowrap;
 }
 
 .table-container::-webkit-scrollbar {
