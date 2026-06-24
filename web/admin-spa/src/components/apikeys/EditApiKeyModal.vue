@@ -554,6 +554,20 @@
             </div>
 
             <div class="space-y-3">
+              <div>
+                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Headroom 覆盖
+                </label>
+                <select
+                  v-model="form.openaiResponsesHeadroomMode"
+                  class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
+                >
+                  <option value="inherit">继承系统设置</option>
+                  <option value="enabled">强制启用</option>
+                  <option value="disabled">强制禁用</option>
+                </select>
+              </div>
+
               <label class="flex cursor-pointer items-start gap-3">
                 <input
                   v-model="form.enableOpenAIResponsesCodexAdaptation"
@@ -1169,6 +1183,7 @@ const form = reactive({
   allowedClients: [],
   enableOpenAIResponsesCodexAdaptation: true,
   enableOpenAIResponsesPayloadRules: false,
+  openaiResponsesHeadroomMode: 'inherit',
   openaiResponsesPayloadRules: [],
   tags: [],
   isActive: true,
@@ -1368,6 +1383,7 @@ const updateApiKey = async () => {
       weeklyResetHour: form.weeklyResetHour,
       enableOpenAIResponsesCodexAdaptation: form.enableOpenAIResponsesCodexAdaptation,
       enableOpenAIResponsesPayloadRules: form.enableOpenAIResponsesPayloadRules,
+      openaiResponsesHeadroomMode: form.openaiResponsesHeadroomMode,
       // 规则内容独立持久化，关闭开关时也要保留已保存的休眠规则。
       openaiResponsesPayloadRules: payloadRules,
       permissions: form.permissions,
@@ -1754,6 +1770,11 @@ onMounted(async () => {
   form.enableOpenAIResponsesPayloadRules =
     props.apiKey.enableOpenAIResponsesPayloadRules === true ||
     props.apiKey.enableOpenAIResponsesPayloadRules === 'true'
+  form.openaiResponsesHeadroomMode = ['inherit', 'enabled', 'disabled'].includes(
+    props.apiKey.openaiResponsesHeadroomMode
+  )
+    ? props.apiKey.openaiResponsesHeadroomMode
+    : 'inherit'
   form.openaiResponsesPayloadRules = Array.isArray(props.apiKey.openaiResponsesPayloadRules)
     ? props.apiKey.openaiResponsesPayloadRules.map((rule) => normalizePayloadRule(rule))
     : []

@@ -72,6 +72,18 @@
             <i class="fas fa-coins mr-2"></i>
             模型价格
           </button>
+          <button
+            :class="[
+              'border-b-2 pb-2 text-sm font-medium transition-colors',
+              activeSection === 'headroom'
+                ? 'border-blue-500 text-blue-600 dark:border-blue-400 dark:text-blue-400'
+                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+            ]"
+            @click="activeSection = 'headroom'"
+          >
+            <i class="fas fa-compress-arrows-alt mr-2"></i>
+            Headroom
+          </button>
         </nav>
       </div>
 
@@ -1380,6 +1392,129 @@
         <div v-show="activeSection === 'modelPricing'">
           <ModelPricingSection />
         </div>
+
+        <!-- Headroom 配置部分 -->
+        <div v-show="activeSection === 'headroom'">
+          <div
+            class="rounded-lg border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800"
+          >
+            <div v-if="headroomLoading" class="py-10 text-center">
+              <div class="loading-spinner mx-auto mb-3"></div>
+              <p class="text-sm text-gray-500 dark:text-gray-400">正在加载 Headroom 配置...</p>
+            </div>
+
+            <div v-else class="space-y-5">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="text-base font-semibold text-gray-900 dark:text-gray-100">
+                    Codex Responses Headroom Proxy
+                  </h4>
+                  <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    仅作用于 OpenAI Responses 账户的 Codex 请求路径
+                  </p>
+                </div>
+                <label class="inline-flex cursor-pointer items-center">
+                  <input v-model="headroomConfig.enabled" class="peer sr-only" type="checkbox" />
+                  <div
+                    class="peer relative h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white"
+                  ></div>
+                  <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">
+                    {{ headroomConfig.enabled ? '已启用' : '已禁用' }}
+                  </span>
+                </label>
+              </div>
+
+              <div class="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Proxy Base URL
+                  </label>
+                  <input
+                    v-model="headroomConfig.proxyBaseUrl"
+                    class="form-input w-full dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
+                    placeholder="http://127.0.0.1:8787"
+                    type="text"
+                  />
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    请求超时（毫秒）
+                  </label>
+                  <input
+                    v-model.number="headroomConfig.requestTimeoutMs"
+                    class="form-input w-full dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
+                    max="60000"
+                    min="1000"
+                    step="1000"
+                    type="number"
+                  />
+                </div>
+                <label class="flex cursor-pointer items-center">
+                  <input
+                    v-model="headroomConfig.healthCheckEnabled"
+                    class="mr-2 rounded text-blue-600 focus:ring-blue-500"
+                    type="checkbox"
+                  />
+                  <span class="text-sm text-gray-700 dark:text-gray-300">启用健康检查</span>
+                </label>
+                <div>
+                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    健康检查缓存（毫秒）
+                  </label>
+                  <input
+                    v-model.number="headroomConfig.healthCheckTtlMs"
+                    class="form-input w-full dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
+                    max="300000"
+                    min="5000"
+                    step="5000"
+                    type="number"
+                  />
+                </div>
+              </div>
+
+              <label class="flex cursor-pointer items-center">
+                <input
+                  v-model="headroomConfig.fallbackOnError"
+                  class="mr-2 rounded text-blue-600 focus:ring-blue-500"
+                  type="checkbox"
+                />
+                <span class="text-sm text-gray-700 dark:text-gray-300">
+                  Headroom 不可用时自动绕过
+                </span>
+              </label>
+
+              <div class="flex flex-wrap gap-3">
+                <button
+                  class="btn btn-primary px-4 py-2"
+                  :disabled="headroomSaving"
+                  @click="saveHeadroomConfig"
+                >
+                  <i class="fas fa-save mr-2"></i>
+                  保存配置
+                </button>
+                <button
+                  class="btn btn-secondary px-4 py-2"
+                  :disabled="headroomTesting"
+                  @click="testHeadroomConfig"
+                >
+                  <i class="fas fa-plug mr-2"></i>
+                  {{ headroomTesting ? '测试中...' : '测试连接' }}
+                </button>
+              </div>
+
+              <div
+                v-if="headroomConfig.updatedAt"
+                class="rounded-lg bg-gray-50 p-3 text-sm text-gray-500 dark:bg-gray-700/50 dark:text-gray-400"
+              >
+                <i class="fas fa-history mr-2"></i>
+                最后更新：{{ formatDateTime(headroomConfig.updatedAt) }}
+                <span v-if="headroomConfig.updatedBy" class="ml-2">
+                  由 <strong>{{ headroomConfig.updatedBy }}</strong> 修改
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -2110,6 +2245,21 @@ const requestDetailRetentionInput = reactive({
 })
 const requestDetailBodyPreviewSaving = ref(false)
 
+// Headroom 配置
+const headroomLoading = ref(false)
+const headroomSaving = ref(false)
+const headroomTesting = ref(false)
+const headroomConfig = ref({
+  enabled: false,
+  proxyBaseUrl: 'http://127.0.0.1:8787',
+  healthCheckEnabled: true,
+  healthCheckTtlMs: 30000,
+  requestTimeoutMs: 10000,
+  fallbackOnError: true,
+  updatedAt: null,
+  updatedBy: null
+})
+
 const normalizeRetentionPart = (value) => {
   const parsed = Number.parseInt(value, 10)
   return Number.isFinite(parsed) ? parsed : 0
@@ -2257,6 +2407,8 @@ const sectionWatcher = watch(activeSection, async (newSection) => {
     await loadClaudeConfig()
   } else if (newSection === 'serviceRates') {
     await loadServiceRates()
+  } else if (newSection === 'headroom') {
+    await loadHeadroomConfig()
   }
 })
 
@@ -2386,6 +2538,9 @@ onMounted(async () => {
     }
     if (activeSection.value === 'serviceRates') {
       await loadServiceRates()
+    }
+    if (activeSection.value === 'headroom') {
+      await loadHeadroomConfig()
     }
   } catch (error) {
     showToast('加载设置失败', 'error')
@@ -2581,6 +2736,97 @@ const saveClaudeConfig = async (options = {}) => {
     showToast('保存 Claude 转发配置失败', 'error')
     console.error(error)
     return { success: false, message: error.message || '保存 Claude 转发配置失败' }
+  }
+}
+
+// 加载 Headroom 配置
+const loadHeadroomConfig = async () => {
+  if (!isMounted.value) return
+  headroomLoading.value = true
+  try {
+    const response = await httpApis.getHeadroomConfigApi({
+      signal: abortController.value.signal
+    })
+    if (response.success && isMounted.value) {
+      headroomConfig.value = {
+        ...headroomConfig.value,
+        ...(response.config || {})
+      }
+    }
+  } catch (error) {
+    if (error.name === 'AbortError') return
+    if (!isMounted.value) return
+    showToast('获取 Headroom 配置失败', 'error')
+    console.error(error)
+  } finally {
+    if (isMounted.value) {
+      headroomLoading.value = false
+    }
+  }
+}
+
+// 保存 Headroom 配置
+const saveHeadroomConfig = async () => {
+  if (!isMounted.value) return
+  headroomSaving.value = true
+  try {
+    const response = await httpApis.updateHeadroomConfigApi(
+      {
+        enabled: headroomConfig.value.enabled,
+        proxyBaseUrl: headroomConfig.value.proxyBaseUrl,
+        healthCheckEnabled: headroomConfig.value.healthCheckEnabled,
+        healthCheckTtlMs: headroomConfig.value.healthCheckTtlMs,
+        requestTimeoutMs: headroomConfig.value.requestTimeoutMs,
+        fallbackOnError: headroomConfig.value.fallbackOnError
+      },
+      { signal: abortController.value.signal }
+    )
+    if (response.success && isMounted.value) {
+      headroomConfig.value = { ...headroomConfig.value, ...(response.config || {}) }
+      showToast('Headroom 配置已保存', 'success')
+    }
+  } catch (error) {
+    if (error.name === 'AbortError') return
+    if (!isMounted.value) return
+    showToast(error?.message || '保存 Headroom 配置失败', 'error')
+    console.error(error)
+  } finally {
+    if (isMounted.value) {
+      headroomSaving.value = false
+    }
+  }
+}
+
+// 测试 Headroom 连接
+const testHeadroomConfig = async () => {
+  if (!isMounted.value) return
+  headroomTesting.value = true
+  try {
+    const response = await httpApis.testHeadroomConfigApi(
+      {
+        proxyBaseUrl: headroomConfig.value.proxyBaseUrl,
+        requestTimeoutMs: headroomConfig.value.requestTimeoutMs,
+        healthCheckEnabled: headroomConfig.value.healthCheckEnabled,
+        healthCheckTtlMs: headroomConfig.value.healthCheckTtlMs,
+        fallbackOnError: headroomConfig.value.fallbackOnError,
+        enabled: headroomConfig.value.enabled
+      },
+      { signal: abortController.value.signal }
+    )
+    if (response.success) {
+      showToast(`Headroom 连接正常（${response.result?.latencyMs || 0}ms）`, 'success')
+    } else {
+      showToast(response.result?.message || 'Headroom 连接失败', 'error')
+    }
+  } catch (error) {
+    if (error.name === 'AbortError') return
+    if (!isMounted.value) return
+    showToast(error?.message || 'Headroom 连接失败', 'error')
+    console.error(error)
+  } finally {
+    if (isMounted.value) {
+      headroomTesting.value = false
+    }
   }
 }
 
