@@ -573,23 +573,4 @@ describe('openai responses payload toggles', () => {
     expect(req.body.prompt_cache_key).toBe('compact-key')
     expect(req.body.instructions).toBe(openaiRoutes.CODEX_CLI_INSTRUCTIONS)
   })
-
-  test('passes Headroom override mode through to openai-responses relay', async () => {
-    const req = createReq({
-      body: {
-        model: 'gpt-5-codex',
-        prompt_cache_key: 'headroom-key'
-      },
-      apiKeyOverrides: {
-        openaiResponsesHeadroomMode: 'enabled'
-      }
-    })
-
-    await openaiRoutes.handleResponses(req, createRes())
-
-    expect(openaiResponsesRelayService.handleRequest).toHaveBeenCalled()
-    expect(openaiResponsesRelayService.handleRequest.mock.calls[0][3].openaiResponsesHeadroomMode).toBe(
-      'enabled'
-    )
-  })
 })

@@ -1498,7 +1498,6 @@ router.post('/api-keys', authenticateAdmin, async (req, res) => {
       enableOpenAIResponsesCodexAdaptation,
       enableOpenAIResponsesPayloadRules,
       removeOpenAIResponsesServiceTier,
-      openaiResponsesHeadroomMode,
       openaiResponsesPayloadRules
     } = req.body
 
@@ -1655,15 +1654,6 @@ router.post('/api-keys', authenticateAdmin, async (req, res) => {
       return res.status(400).json({ error: 'removeOpenAIResponsesServiceTier must be a boolean' })
     }
 
-    if (
-      openaiResponsesHeadroomMode !== undefined &&
-      !['inherit', 'enabled', 'disabled'].includes(openaiResponsesHeadroomMode)
-    ) {
-      return res.status(400).json({
-        error: 'openaiResponsesHeadroomMode must be one of inherit, enabled, disabled'
-      })
-    }
-
     const payloadRulesValidation = requestBodyRuleService.validateAndNormalizeRules(
       openaiResponsesPayloadRules
     )
@@ -1732,7 +1722,6 @@ router.post('/api-keys', authenticateAdmin, async (req, res) => {
         enableOpenAIResponsesPayloadRules !== undefined ? enableOpenAIResponsesPayloadRules : false,
       removeOpenAIResponsesServiceTier:
         removeOpenAIResponsesServiceTier !== undefined ? removeOpenAIResponsesServiceTier : false,
-      openaiResponsesHeadroomMode: openaiResponsesHeadroomMode || 'inherit',
       openaiResponsesPayloadRules: payloadRulesValidation.rules
     })
 
@@ -2146,7 +2135,6 @@ router.put('/api-keys/:keyId', authenticateAdmin, async (req, res) => {
       enableOpenAIResponsesCodexAdaptation,
       enableOpenAIResponsesPayloadRules,
       removeOpenAIResponsesServiceTier,
-      openaiResponsesHeadroomMode,
       openaiResponsesPayloadRules
     } = req.body
 
@@ -2365,15 +2353,6 @@ router.put('/api-keys/:keyId', authenticateAdmin, async (req, res) => {
         return res.status(400).json({ error: 'removeOpenAIResponsesServiceTier must be a boolean' })
       }
       updates.removeOpenAIResponsesServiceTier = removeOpenAIResponsesServiceTier
-    }
-
-    if (openaiResponsesHeadroomMode !== undefined) {
-      if (!['inherit', 'enabled', 'disabled'].includes(openaiResponsesHeadroomMode)) {
-        return res.status(400).json({
-          error: 'openaiResponsesHeadroomMode must be one of inherit, enabled, disabled'
-        })
-      }
-      updates.openaiResponsesHeadroomMode = openaiResponsesHeadroomMode
     }
 
     if (openaiResponsesPayloadRules !== undefined) {

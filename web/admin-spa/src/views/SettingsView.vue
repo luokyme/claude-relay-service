@@ -51,6 +51,18 @@
           <button
             :class="[
               'border-b-2 pb-2 text-sm font-medium transition-colors',
+              activeSection === 'codexCompression'
+                ? 'border-blue-500 text-blue-600 dark:border-blue-400 dark:text-blue-400'
+                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+            ]"
+            @click="activeSection = 'codexCompression'"
+          >
+            <i class="fas fa-compress-arrows-alt mr-2"></i>
+            Codex 压缩
+          </button>
+          <button
+            :class="[
+              'border-b-2 pb-2 text-sm font-medium transition-colors',
               activeSection === 'serviceRates'
                 ? 'border-blue-500 text-blue-600 dark:border-blue-400 dark:text-blue-400'
                 : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
@@ -71,18 +83,6 @@
           >
             <i class="fas fa-coins mr-2"></i>
             模型价格
-          </button>
-          <button
-            :class="[
-              'border-b-2 pb-2 text-sm font-medium transition-colors',
-              activeSection === 'headroom'
-                ? 'border-blue-500 text-blue-600 dark:border-blue-400 dark:text-blue-400'
-                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-            ]"
-            @click="activeSection = 'headroom'"
-          >
-            <i class="fas fa-compress-arrows-alt mr-2"></i>
-            Headroom
           </button>
         </nav>
       </div>
@@ -1281,6 +1281,145 @@
           </div>
         </div>
 
+        <!-- Codex 请求压缩配置部分 -->
+        <div v-show="activeSection === 'codexCompression'">
+          <div v-if="codexCompressionLoading" class="py-12 text-center">
+            <div class="loading-spinner mx-auto mb-4"></div>
+            <p class="text-gray-500 dark:text-gray-400">正在加载 Codex 压缩配置...</p>
+          </div>
+
+          <div v-else>
+            <div
+              class="mb-6 rounded-lg bg-white/80 p-6 shadow-lg backdrop-blur-sm dark:bg-gray-800/80"
+            >
+              <div class="mb-6 flex items-start justify-between gap-4">
+                <div class="flex items-center">
+                  <div
+                    class="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-500 text-white shadow-lg"
+                  >
+                    <i class="fas fa-compress-arrows-alt text-xl"></i>
+                  </div>
+                  <div class="ml-4">
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white">
+                      CRS 内置 Codex 请求压缩
+                    </h4>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                      在 OpenAI Responses 转发前裁剪超长工具输出和文本块，不启动额外代理进程
+                    </p>
+                  </div>
+                </div>
+
+                <label class="relative inline-flex cursor-pointer items-center">
+                  <input
+                    v-model="codexCompressionConfig.enabled"
+                    class="peer sr-only"
+                    type="checkbox"
+                  />
+                  <div
+                    class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-emerald-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-emerald-800"
+                  ></div>
+                </label>
+              </div>
+
+              <div class="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    触发长度（字符）
+                  </label>
+                  <input
+                    v-model.number="codexCompressionConfig.minStringChars"
+                    class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                    max="2000000"
+                    min="1000"
+                    type="number"
+                  />
+                  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    单个字符串达到该长度后才会压缩
+                  </p>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    最大递归深度
+                  </label>
+                  <input
+                    v-model.number="codexCompressionConfig.maxDepth"
+                    class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                    max="40"
+                    min="3"
+                    type="number"
+                  />
+                  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    防止异常请求体导致深层遍历
+                  </p>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    保留开头（字符）
+                  </label>
+                  <input
+                    v-model.number="codexCompressionConfig.headChars"
+                    class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                    max="200000"
+                    min="0"
+                    type="number"
+                  />
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    保留末尾（字符）
+                  </label>
+                  <input
+                    v-model.number="codexCompressionConfig.tailChars"
+                    class="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-gray-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                    max="200000"
+                    min="100"
+                    type="number"
+                  />
+                </div>
+              </div>
+
+              <label class="mt-5 inline-flex cursor-pointer items-center">
+                <input
+                  v-model="codexCompressionConfig.includeInstructions"
+                  class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                  type="checkbox"
+                />
+                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                  允许压缩 instructions 字段
+                </span>
+              </label>
+
+              <div class="mt-6 flex items-center gap-3">
+                <button
+                  class="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50"
+                  :disabled="codexCompressionSaving"
+                  @click="saveCodexCompressionConfig"
+                >
+                  <i class="fas fa-save mr-2"></i>
+                  {{ codexCompressionSaving ? '保存中...' : '保存配置' }}
+                </button>
+                <span class="text-xs text-gray-500 dark:text-gray-400">
+                  仅影响 Codex 的 OpenAI Responses 路径
+                </span>
+              </div>
+            </div>
+
+            <div
+              v-if="codexCompressionConfig.updatedAt"
+              class="rounded-lg bg-gray-50 p-4 text-sm text-gray-500 dark:bg-gray-700/50 dark:text-gray-400"
+            >
+              <i class="fas fa-history mr-2"></i>
+              最后更新：{{ formatDateTime(codexCompressionConfig.updatedAt) }}
+              <span v-if="codexCompressionConfig.updatedBy" class="ml-2">
+                由 <strong>{{ codexCompressionConfig.updatedBy }}</strong> 修改
+              </span>
+            </div>
+          </div>
+        </div>
+
         <!-- 服务倍率配置部分 -->
         <div v-show="activeSection === 'serviceRates'">
           <!-- 加载状态 -->
@@ -1391,129 +1530,6 @@
         <!-- 模型价格部分 -->
         <div v-show="activeSection === 'modelPricing'">
           <ModelPricingSection />
-        </div>
-
-        <!-- Headroom 配置部分 -->
-        <div v-show="activeSection === 'headroom'">
-          <div
-            class="rounded-lg border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800"
-          >
-            <div v-if="headroomLoading" class="py-10 text-center">
-              <div class="loading-spinner mx-auto mb-3"></div>
-              <p class="text-sm text-gray-500 dark:text-gray-400">正在加载 Headroom 配置...</p>
-            </div>
-
-            <div v-else class="space-y-5">
-              <div class="flex items-center justify-between">
-                <div>
-                  <h4 class="text-base font-semibold text-gray-900 dark:text-gray-100">
-                    Codex Responses Headroom Proxy
-                  </h4>
-                  <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    仅作用于 OpenAI Responses 账户的 Codex 请求路径
-                  </p>
-                </div>
-                <label class="inline-flex cursor-pointer items-center">
-                  <input v-model="headroomConfig.enabled" class="peer sr-only" type="checkbox" />
-                  <div
-                    class="peer relative h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white"
-                  ></div>
-                  <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">
-                    {{ headroomConfig.enabled ? '已启用' : '已禁用' }}
-                  </span>
-                </label>
-              </div>
-
-              <div class="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Proxy Base URL
-                  </label>
-                  <input
-                    v-model="headroomConfig.proxyBaseUrl"
-                    class="form-input w-full dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
-                    placeholder="http://127.0.0.1:8787"
-                    type="text"
-                  />
-                </div>
-                <div>
-                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    请求超时（毫秒）
-                  </label>
-                  <input
-                    v-model.number="headroomConfig.requestTimeoutMs"
-                    class="form-input w-full dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
-                    max="60000"
-                    min="1000"
-                    step="1000"
-                    type="number"
-                  />
-                </div>
-                <label class="flex cursor-pointer items-center">
-                  <input
-                    v-model="headroomConfig.healthCheckEnabled"
-                    class="mr-2 rounded text-blue-600 focus:ring-blue-500"
-                    type="checkbox"
-                  />
-                  <span class="text-sm text-gray-700 dark:text-gray-300">启用健康检查</span>
-                </label>
-                <div>
-                  <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    健康检查缓存（毫秒）
-                  </label>
-                  <input
-                    v-model.number="headroomConfig.healthCheckTtlMs"
-                    class="form-input w-full dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
-                    max="300000"
-                    min="5000"
-                    step="5000"
-                    type="number"
-                  />
-                </div>
-              </div>
-
-              <label class="flex cursor-pointer items-center">
-                <input
-                  v-model="headroomConfig.fallbackOnError"
-                  class="mr-2 rounded text-blue-600 focus:ring-blue-500"
-                  type="checkbox"
-                />
-                <span class="text-sm text-gray-700 dark:text-gray-300">
-                  Headroom 不可用时自动绕过
-                </span>
-              </label>
-
-              <div class="flex flex-wrap gap-3">
-                <button
-                  class="btn btn-primary px-4 py-2"
-                  :disabled="headroomSaving"
-                  @click="saveHeadroomConfig"
-                >
-                  <i class="fas fa-save mr-2"></i>
-                  保存配置
-                </button>
-                <button
-                  class="btn btn-secondary px-4 py-2"
-                  :disabled="headroomTesting"
-                  @click="testHeadroomConfig"
-                >
-                  <i class="fas fa-plug mr-2"></i>
-                  {{ headroomTesting ? '测试中...' : '测试连接' }}
-                </button>
-              </div>
-
-              <div
-                v-if="headroomConfig.updatedAt"
-                class="rounded-lg bg-gray-50 p-3 text-sm text-gray-500 dark:bg-gray-700/50 dark:text-gray-400"
-              >
-                <i class="fas fa-history mr-2"></i>
-                最后更新：{{ formatDateTime(headroomConfig.updatedAt) }}
-                <span v-if="headroomConfig.updatedBy" class="ml-2">
-                  由 <strong>{{ headroomConfig.updatedBy }}</strong> 修改
-                </span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -2245,17 +2261,15 @@ const requestDetailRetentionInput = reactive({
 })
 const requestDetailBodyPreviewSaving = ref(false)
 
-// Headroom 配置
-const headroomLoading = ref(false)
-const headroomSaving = ref(false)
-const headroomTesting = ref(false)
-const headroomConfig = ref({
+const codexCompressionLoading = ref(false)
+const codexCompressionSaving = ref(false)
+const codexCompressionConfig = ref({
   enabled: false,
-  proxyBaseUrl: 'http://127.0.0.1:8787',
-  healthCheckEnabled: true,
-  healthCheckTtlMs: 30000,
-  requestTimeoutMs: 10000,
-  fallbackOnError: true,
+  minStringChars: 24000,
+  headChars: 4000,
+  tailChars: 12000,
+  maxDepth: 12,
+  includeInstructions: false,
   updatedAt: null,
   updatedBy: null
 })
@@ -2405,10 +2419,10 @@ const sectionWatcher = watch(activeSection, async (newSection) => {
     await loadWebhookConfig()
   } else if (newSection === 'claude') {
     await loadClaudeConfig()
+  } else if (newSection === 'codexCompression') {
+    await loadCodexCompressionConfig()
   } else if (newSection === 'serviceRates') {
     await loadServiceRates()
-  } else if (newSection === 'headroom') {
-    await loadHeadroomConfig()
   }
 })
 
@@ -2539,8 +2553,8 @@ onMounted(async () => {
     if (activeSection.value === 'serviceRates') {
       await loadServiceRates()
     }
-    if (activeSection.value === 'headroom') {
-      await loadHeadroomConfig()
+    if (activeSection.value === 'codexCompression') {
+      await loadCodexCompressionConfig()
     }
   } catch (error) {
     showToast('加载设置失败', 'error')
@@ -2739,93 +2753,77 @@ const saveClaudeConfig = async (options = {}) => {
   }
 }
 
-// 加载 Headroom 配置
-const loadHeadroomConfig = async () => {
+const loadCodexCompressionConfig = async () => {
   if (!isMounted.value) return
-  headroomLoading.value = true
+  codexCompressionLoading.value = true
   try {
-    const response = await httpApis.getHeadroomConfigApi({
+    const response = await httpApis.getCodexRequestCompressionConfigApi({
       signal: abortController.value.signal
     })
     if (response.success && isMounted.value) {
-      headroomConfig.value = {
-        ...headroomConfig.value,
-        ...(response.config || {})
+      codexCompressionConfig.value = {
+        enabled: response.config?.enabled ?? false,
+        minStringChars: response.config?.minStringChars ?? 24000,
+        headChars: response.config?.headChars ?? 4000,
+        tailChars: response.config?.tailChars ?? 12000,
+        maxDepth: response.config?.maxDepth ?? 12,
+        includeInstructions: response.config?.includeInstructions ?? false,
+        updatedAt: response.config?.updatedAt || null,
+        updatedBy: response.config?.updatedBy || null
       }
     }
   } catch (error) {
     if (error.name === 'AbortError') return
     if (!isMounted.value) return
-    showToast('获取 Headroom 配置失败', 'error')
+    showToast('获取 Codex 压缩配置失败', 'error')
     console.error(error)
   } finally {
     if (isMounted.value) {
-      headroomLoading.value = false
+      codexCompressionLoading.value = false
     }
   }
 }
 
-// 保存 Headroom 配置
-const saveHeadroomConfig = async () => {
+const saveCodexCompressionConfig = async () => {
   if (!isMounted.value) return
-  headroomSaving.value = true
+  codexCompressionSaving.value = true
   try {
-    const response = await httpApis.updateHeadroomConfigApi(
+    const response = await httpApis.updateCodexRequestCompressionConfigApi(
       {
-        enabled: headroomConfig.value.enabled,
-        proxyBaseUrl: headroomConfig.value.proxyBaseUrl,
-        healthCheckEnabled: headroomConfig.value.healthCheckEnabled,
-        healthCheckTtlMs: headroomConfig.value.healthCheckTtlMs,
-        requestTimeoutMs: headroomConfig.value.requestTimeoutMs,
-        fallbackOnError: headroomConfig.value.fallbackOnError
+        enabled: codexCompressionConfig.value.enabled,
+        minStringChars: codexCompressionConfig.value.minStringChars,
+        headChars: codexCompressionConfig.value.headChars,
+        tailChars: codexCompressionConfig.value.tailChars,
+        maxDepth: codexCompressionConfig.value.maxDepth,
+        includeInstructions: codexCompressionConfig.value.includeInstructions
       },
-      { signal: abortController.value.signal }
+      {
+        signal: abortController.value.signal
+      }
     )
+
     if (response.success && isMounted.value) {
-      headroomConfig.value = { ...headroomConfig.value, ...(response.config || {}) }
-      showToast('Headroom 配置已保存', 'success')
+      codexCompressionConfig.value = {
+        ...codexCompressionConfig.value,
+        ...(response.config || {})
+      }
+      showToast('Codex 压缩配置已保存', 'success')
+      return response
     }
-  } catch (error) {
-    if (error.name === 'AbortError') return
-    if (!isMounted.value) return
-    showToast(error?.message || '保存 Headroom 配置失败', 'error')
-    console.error(error)
-  } finally {
-    if (isMounted.value) {
-      headroomSaving.value = false
-    }
-  }
-}
 
-// 测试 Headroom 连接
-const testHeadroomConfig = async () => {
-  if (!isMounted.value) return
-  headroomTesting.value = true
-  try {
-    const response = await httpApis.testHeadroomConfigApi(
-      {
-        proxyBaseUrl: headroomConfig.value.proxyBaseUrl,
-        requestTimeoutMs: headroomConfig.value.requestTimeoutMs,
-        healthCheckEnabled: headroomConfig.value.healthCheckEnabled,
-        healthCheckTtlMs: headroomConfig.value.healthCheckTtlMs,
-        fallbackOnError: headroomConfig.value.fallbackOnError,
-        enabled: headroomConfig.value.enabled
-      },
-      { signal: abortController.value.signal }
-    )
-    if (response.success) {
-      showToast(`Headroom 连接正常（${response.result?.latencyMs || 0}ms）`, 'success')
-    } else {
-      showToast(response.result?.message || 'Headroom 连接失败', 'error')
+    if (isMounted.value) {
+      showToast(response.message || '保存 Codex 压缩配置失败', 'error')
     }
+    return response
   } catch (error) {
     if (error.name === 'AbortError') return
     if (!isMounted.value) return
-    showToast(error?.message || 'Headroom 连接失败', 'error')
+    showToast(error?.message || '保存 Codex 压缩配置失败', 'error')
     console.error(error)
+    return { success: false, message: error.message || '保存 Codex 压缩配置失败' }
   } finally {
     if (isMounted.value) {
-      headroomTesting.value = false
+      codexCompressionSaving.value = false
     }
   }
 }

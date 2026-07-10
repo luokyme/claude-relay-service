@@ -89,6 +89,12 @@
     "prettier-plugin-tailwindcss": "^0.7.2",
     "supertest": "^6.3.3"
   },
+  "jest": {
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/.temp/"
+    ]
+  },
   "engines": {
     "node": ">=18.0.0"
   },

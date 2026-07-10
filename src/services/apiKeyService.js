@@ -164,13 +164,6 @@ function parseOpenAIResponsesPayloadRules(rawRules) {
   return parsedRules.map((rule) => requestBodyRuleService.normalizeRule(rule)).filter(Boolean)
 }
 
-function normalizeOpenAIResponsesHeadroomMode(value) {
-  if (['inherit', 'enabled', 'disabled'].includes(value)) {
-    return value
-  }
-  return 'inherit'
-}
-
 class ApiKeyService {
   constructor() {
     this.prefix = config.security.apiKeyPrefix
@@ -214,7 +207,6 @@ class ApiKeyService {
       enableOpenAIResponsesCodexAdaptation = true,
       enableOpenAIResponsesPayloadRules = false,
       removeOpenAIResponsesServiceTier = false,
-      openaiResponsesHeadroomMode = 'inherit',
       openaiResponsesPayloadRules = []
     } = options
 
@@ -278,9 +270,6 @@ class ApiKeyService {
       enableOpenAIResponsesCodexAdaptation: String(enableOpenAIResponsesCodexAdaptation !== false),
       enableOpenAIResponsesPayloadRules: String(enableOpenAIResponsesPayloadRules === true),
       removeOpenAIResponsesServiceTier: String(removeOpenAIResponsesServiceTier === true),
-      openaiResponsesHeadroomMode: normalizeOpenAIResponsesHeadroomMode(
-        openaiResponsesHeadroomMode
-      ),
       openaiResponsesPayloadRules: JSON.stringify(payloadRulesValidation.rules)
     }
 
@@ -360,9 +349,6 @@ class ApiKeyService {
       removeOpenAIResponsesServiceTier: parseBooleanWithDefault(
         keyData.removeOpenAIResponsesServiceTier,
         false
-      ),
-      openaiResponsesHeadroomMode: normalizeOpenAIResponsesHeadroomMode(
-        keyData.openaiResponsesHeadroomMode
       ),
       openaiResponsesPayloadRules: parseOpenAIResponsesPayloadRules(
         keyData.openaiResponsesPayloadRules
@@ -525,9 +511,6 @@ class ApiKeyService {
         keyData.removeOpenAIResponsesServiceTier,
         false
       )
-      const openaiResponsesHeadroomMode = normalizeOpenAIResponsesHeadroomMode(
-        keyData.openaiResponsesHeadroomMode
-      )
 
       return {
         valid: true,
@@ -567,7 +550,6 @@ class ApiKeyService {
           enableOpenAIResponsesCodexAdaptation,
           enableOpenAIResponsesPayloadRules,
           removeOpenAIResponsesServiceTier,
-          openaiResponsesHeadroomMode,
           openaiResponsesPayloadRules
         }
       }
@@ -674,9 +656,6 @@ class ApiKeyService {
         keyData.removeOpenAIResponsesServiceTier,
         false
       )
-      const openaiResponsesHeadroomMode = normalizeOpenAIResponsesHeadroomMode(
-        keyData.openaiResponsesHeadroomMode
-      )
 
       return {
         valid: true,
@@ -725,7 +704,6 @@ class ApiKeyService {
           enableOpenAIResponsesCodexAdaptation,
           enableOpenAIResponsesPayloadRules,
           removeOpenAIResponsesServiceTier,
-          openaiResponsesHeadroomMode,
           openaiResponsesPayloadRules
         }
       }
@@ -936,9 +914,6 @@ class ApiKeyService {
         key.removeOpenAIResponsesServiceTier = parseBooleanWithDefault(
           key.removeOpenAIResponsesServiceTier,
           false
-        )
-        key.openaiResponsesHeadroomMode = normalizeOpenAIResponsesHeadroomMode(
-          key.openaiResponsesHeadroomMode
         )
         key.permissions = normalizePermissions(key.permissions)
         key.dailyCostLimit = parseFloat(key.dailyCostLimit || 0)
@@ -1208,9 +1183,6 @@ class ApiKeyService {
           key.removeOpenAIResponsesServiceTier,
           false
         )
-        key.openaiResponsesHeadroomMode = normalizeOpenAIResponsesHeadroomMode(
-          key.openaiResponsesHeadroomMode
-        )
         key.isActivated = key.isActivated === 'true' || key.isActivated === true
         key.permissions = key.permissions || 'all'
         key.activationUnit = key.activationUnit || 'days'
@@ -1415,7 +1387,6 @@ class ApiKeyService {
         'enableOpenAIResponsesCodexAdaptation',
         'enableOpenAIResponsesPayloadRules',
         'removeOpenAIResponsesServiceTier',
-        'openaiResponsesHeadroomMode',
         'openaiResponsesPayloadRules'
       ]
       const updatedData = { ...keyData }
@@ -1444,8 +1415,6 @@ class ApiKeyService {
           ) {
             // 布尔值转字符串
             updatedData[field] = String(value)
-          } else if (field === 'openaiResponsesHeadroomMode') {
-            updatedData[field] = normalizeOpenAIResponsesHeadroomMode(value)
           } else if (field === 'expiresAt' || field === 'activatedAt') {
             // 日期字段保持原样，不要toString()
             updatedData[field] = value || ''
@@ -2523,9 +2492,6 @@ class ApiKeyService {
         removeOpenAIResponsesServiceTier: parseBooleanWithDefault(
           keyData.removeOpenAIResponsesServiceTier,
           false
-        ),
-        openaiResponsesHeadroomMode: normalizeOpenAIResponsesHeadroomMode(
-          keyData.openaiResponsesHeadroomMode
         ),
         openaiResponsesPayloadRules: parseOpenAIResponsesPayloadRules(
           keyData.openaiResponsesPayloadRules

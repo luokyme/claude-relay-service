@@ -345,13 +345,11 @@ export const getClaudeRelayConfigApi = (config) =>
 export const updateClaudeRelayConfigApi = (data, config) =>
   request({ url: '/admin/claude-relay-config', method: 'PUT', data, ...config })
 
-// Headroom 配置
-export const getHeadroomConfigApi = (config) =>
-  request({ url: '/admin/headroom-config', method: 'GET', ...config })
-export const updateHeadroomConfigApi = (data, config) =>
-  request({ url: '/admin/headroom-config', method: 'PUT', data, ...config })
-export const testHeadroomConfigApi = (data, config) =>
-  request({ url: '/admin/headroom-config/test', method: 'POST', data, ...config })
+// Codex 请求压缩配置
+export const getCodexRequestCompressionConfigApi = (config) =>
+  request({ url: '/admin/codex-request-compression-config', method: 'GET', ...config })
+export const updateCodexRequestCompressionConfigApi = (data, config) =>
+  request({ url: '/admin/codex-request-compression-config', method: 'PUT', data, ...config })
 
 // 服务倍率配置（管理端）
 export const getAdminServiceRatesApi = (config) =>

@@ -9,7 +9,7 @@ const config = require('../../../config/config')
 const crypto = require('crypto')
 const LRUCache = require('../../utils/lruCache')
 const upstreamErrorHelper = require('../../utils/upstreamErrorHelper')
-const headroomConfigService = require('../headroomConfigService')
+const codexRequestCompressionService = require('../codexRequestCompressionService')
 const {
   createRequestDetailMeta,
   extractOpenAICacheReadTokens
@@ -48,64 +48,6 @@ function extractCacheCreationTokens(usageData) {
 class OpenAIResponsesRelayService {
   constructor() {
     this.defaultTimeout = config.requestTimeout || 600000
-  }
-
-  _isRetryableHeadroomError(error) {
-    return (
-      !error.response &&
-      ['ECONNREFUSED', 'ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND', 'EAI_AGAIN', 'ECONNABORTED'].includes(
-        error.code
-      )
-    )
-  }
-
-  async _buildTarget(req, fullAccount, apiKeyData) {
-    const providerEndpoint = fullAccount.providerEndpoint || 'responses'
-    let targetPath = req.path
-
-    // 根据 providerEndpoint 配置归一化路径
-    // 注意：unified.js 已将 /v1/chat/completions 的请求体转换为 Responses 格式，
-    // 因此这里只需归一化路径即可；反向 responses→completions 需要同时转换请求体，
-    // 目前不支持，所以只保留 responses 和 auto 两种模式
-    if (
-      providerEndpoint === 'responses' &&
-      (targetPath === '/v1/chat/completions' || targetPath === '/chat/completions')
-    ) {
-      const newPath = targetPath.startsWith('/v1') ? '/v1/responses' : '/responses'
-      logger.info(`📝 Normalized path (${req.path}) → ${newPath} (providerEndpoint=responses)`)
-      targetPath = newPath
-    }
-    // providerEndpoint === 'auto' 时保持原始路径不变
-
-    const originalBaseApi = fullAccount.baseApi || ''
-    let originalTargetPath = targetPath
-    // 防止 baseApi 已含 /v1 时路径重复（如 baseApi=http://host/v1 + targetPath=/v1/responses → /v1/v1/responses）
-    if (originalBaseApi.endsWith('/v1') && originalTargetPath.startsWith('/v1/')) {
-      originalTargetPath = originalTargetPath.slice(3) // '/v1/responses' → '/responses'
-    }
-
-    const originalUrl = `${originalBaseApi}${originalTargetPath}`
-    const headroomDecision = await headroomConfigService.shouldUseHeadroom(apiKeyData)
-    const headroomTargetPath = targetPath.startsWith('/v1/') ? targetPath : `/v1${targetPath}`
-
-    if (!headroomDecision.useHeadroom) {
-      if (headroomDecision.reason === 'health_check_failed') {
-        logger.warn('⚠️ Headroom health check failed, bypassing proxy for OpenAI-Responses request')
-      }
-      return {
-        targetUrl: originalUrl,
-        originalUrl,
-        usingHeadroom: false,
-        headroomDecision
-      }
-    }
-
-    return {
-      targetUrl: `${headroomDecision.config.proxyBaseUrl}${headroomTargetPath}`,
-      originalUrl,
-      usingHeadroom: true,
-      headroomDecision
-    }
   }
 
   // 节流更新 lastUsedAt
@@ -154,8 +96,30 @@ class OpenAIResponsesRelayService {
       req.once('close', handleClientDisconnect)
       res.once('close', handleClientDisconnect)
 
-      const target = await this._buildTarget(req, fullAccount, apiKeyData)
-      const { targetUrl } = target
+      // 构建目标 URL（根据 providerEndpoint 配置决定端点路径）
+      const providerEndpoint = fullAccount.providerEndpoint || 'responses'
+      let targetPath = req.path
+
+      // 根据 providerEndpoint 配置归一化路径
+      // 注意：unified.js 已将 /v1/chat/completions 的请求体转换为 Responses 格式，
+      // 因此这里只需归一化路径即可；反向 responses→completions 需要同时转换请求体，
+      // 目前不支持，所以只保留 responses 和 auto 两种模式
+      if (
+        providerEndpoint === 'responses' &&
+        (targetPath === '/v1/chat/completions' || targetPath === '/chat/completions')
+      ) {
+        const newPath = targetPath.startsWith('/v1') ? '/v1/responses' : '/responses'
+        logger.info(`📝 Normalized path (${req.path}) → ${newPath} (providerEndpoint=responses)`)
+        targetPath = newPath
+      }
+      // providerEndpoint === 'auto' 时保持原始路径不变
+
+      // 防止 baseApi 已含 /v1 时路径重复（如 baseApi=http://host/v1 + targetPath=/v1/responses → /v1/v1/responses）
+      const baseApi = fullAccount.baseApi || ''
+      if (baseApi.endsWith('/v1') && targetPath.startsWith('/v1/')) {
+        targetPath = targetPath.slice(3) // '/v1/responses' → '/responses'
+      }
+      const targetUrl = `${baseApi}${targetPath}`
       logger.info(`🎯 Forwarding to: ${targetUrl}`)
 
       // 构建请求头 - 使用统一的 headerFilter 移除 CDN headers
@@ -174,6 +138,15 @@ class OpenAIResponsesRelayService {
         // 透传原始 User-Agent
         headers['User-Agent'] = req.headers['user-agent']
         logger.debug(`📱 Forwarding original User-Agent: ${req.headers['user-agent']}`)
+      }
+
+      const compressionStats = await codexRequestCompressionService.compressRequestBody(req.body)
+      if (compressionStats.compressedFields > 0) {
+        logger.info('🗜️ Codex request compression applied', {
+          accountId: account.id,
+          compressedFields: compressionStats.compressedFields,
+          removedChars: compressionStats.removedChars
+        })
       }
 
       // 配置请求选项
@@ -213,28 +186,7 @@ class OpenAIResponsesRelayService {
       })
 
       // 发送请求
-      let response
-      try {
-        response = await axios(requestOptions)
-      } catch (error) {
-        const shouldFallback =
-          target.usingHeadroom &&
-          target.headroomDecision.config.fallbackOnError !== false &&
-          this._isRetryableHeadroomError(error)
-
-        if (!shouldFallback) {
-          throw error
-        }
-
-        logger.warn('⚠️ Headroom proxy request failed, falling back to original upstream:', {
-          error: error.message,
-          originalUrl: target.originalUrl
-        })
-        response = await axios({
-          ...requestOptions,
-          url: target.originalUrl
-        })
-      }
+      const response = await axios(requestOptions)
 
       // 处理 429 限流错误
       if (response.status === 429) {

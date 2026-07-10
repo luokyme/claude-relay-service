@@ -1114,7 +1114,6 @@ const form = reactive({
   modelInput: '',
   enableClientRestriction: false,
   allowedClients: [],
-  openaiResponsesHeadroomMode: 'inherit',
   tags: []
 })
 
@@ -1543,8 +1542,7 @@ const createApiKey = async () => {
       enableModelRestriction: form.enableModelRestriction,
       restrictedModels: form.restrictedModels,
       enableClientRestriction: form.enableClientRestriction,
-      allowedClients: form.allowedClients,
-      openaiResponsesHeadroomMode: form.openaiResponsesHeadroomMode
+      allowedClients: form.allowedClients
     }
 
     // 处理Claude账户绑定（区分OAuth和Console）

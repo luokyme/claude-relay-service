@@ -797,9 +797,6 @@ class RedisClient {
     if (parsed.removeOpenAIResponsesServiceTier === undefined) {
       parsed.removeOpenAIResponsesServiceTier = false
     }
-    if (!['inherit', 'enabled', 'disabled'].includes(parsed.openaiResponsesHeadroomMode)) {
-      parsed.openaiResponsesHeadroomMode = 'inherit'
-    }
 
     // 数字字段
     const numFields = [
