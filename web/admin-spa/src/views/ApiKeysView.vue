@@ -334,12 +334,6 @@
                       标签
                     </th>
                     <th
-                      class="px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
-                      title="控制 OpenAI Responses 请求的 service_tier：不改变、强制增加 priority 或移除"
-                    >
-                      Fast/Priority
-                    </th>
-                    <th
                       class="cursor-pointer px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600"
                       @click="sortApiKeys('status')"
                     >
@@ -601,34 +595,6 @@
                             class="text-xs text-gray-400"
                             >无标签</span
                           >
-                        </div>
-                      </td>
-                      <!-- Fast/Priority service_tier 三态开关 -->
-                      <td class="whitespace-nowrap px-3 py-3">
-                        <div
-                          class="inline-flex overflow-hidden rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"
-                        >
-                          <button
-                            v-for="option in serviceTierModeOptions"
-                            :key="option.value"
-                            :aria-pressed="getServiceTierMode(key) === option.value"
-                            :class="[
-                              getServiceTierMode(key) === option.value
-                                ? option.activeClass
-                                : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700',
-                              'border-r border-gray-200 px-2 py-1.5 text-xs font-medium transition-colors last:border-r-0 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700'
-                            ]"
-                            :disabled="isServiceTierModeUpdating(key.id)"
-                            :title="option.title"
-                            type="button"
-                            @click="setServiceTierMode(key, option.value)"
-                          >
-                            {{ option.label }}
-                          </button>
-                          <i
-                            v-if="isServiceTierModeUpdating(key.id)"
-                            class="fas fa-spinner fa-spin self-center px-2 text-[10px] text-gray-500"
-                          />
                         </div>
                       </td>
                       <td class="whitespace-nowrap px-3 py-3">
@@ -1045,7 +1011,7 @@
 
                     <!-- 模型统计展开区域 -->
                     <tr v-if="key && key.id && expandedApiKeys[key.id]">
-                      <td class="bg-gray-50 px-3 py-3 dark:bg-gray-700" colspan="13">
+                      <td class="bg-gray-50 px-3 py-3 dark:bg-gray-700" colspan="12">
                         <div v-if="!apiKeyModelStats[key.id]" class="py-4 text-center">
                           <div class="loading-spinner mx-auto" />
                           <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
@@ -2175,9 +2141,11 @@
 
     <UsageDetailModal
       :api-key="selectedApiKeyForDetail || {}"
+      :service-tier-mode-updating="isServiceTierModeUpdating(selectedApiKeyForDetail?.id)"
       :show="showUsageDetailModal"
       @close="showUsageDetailModal = false"
       @open-timeline="openTimeline"
+      @update-service-tier="setServiceTierMode"
     />
 
     <TagManagementModal
@@ -4009,6 +3977,10 @@ const setServiceTierMode = async (key, mode) => {
       if (localKey) {
         localKey.openAIResponsesServiceTierMode = mode
         localKey.removeOpenAIResponsesServiceTier = mode === 'remove'
+      }
+      if (selectedApiKeyForDetail.value?.id === key.id) {
+        selectedApiKeyForDetail.value.openAIResponsesServiceTierMode = mode
+        selectedApiKeyForDetail.value.removeOpenAIResponsesServiceTier = mode === 'remove'
       }
       const label = serviceTierModeOptions.find((option) => option.value === mode)?.label || mode
       showToast(`service_tier 已切换为${label}`, 'success')

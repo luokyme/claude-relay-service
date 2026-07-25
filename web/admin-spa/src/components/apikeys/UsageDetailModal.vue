@@ -27,6 +27,50 @@
 
         <!-- 内容区 -->
         <div class="modal-scroll-content custom-scrollbar flex-1 overflow-y-auto">
+          <!-- OpenAI Responses 请求设置 -->
+          <div
+            class="mb-6 flex flex-col gap-3 border-b border-gray-200 pb-5 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div>
+              <div class="flex items-center gap-2">
+                <i class="fas fa-bolt text-amber-500" />
+                <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Fast/Priority
+                </h4>
+              </div>
+              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                控制 OpenAI Responses 请求的 service_tier
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <div
+                class="inline-flex overflow-hidden rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"
+              >
+                <button
+                  v-for="option in serviceTierModeOptions"
+                  :key="option.value"
+                  :aria-pressed="serviceTierMode === option.value"
+                  :class="[
+                    serviceTierMode === option.value
+                      ? option.activeClass
+                      : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700',
+                    'border-r border-gray-200 px-3 py-2 text-xs font-medium transition-colors last:border-r-0 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700'
+                  ]"
+                  :disabled="serviceTierModeUpdating"
+                  :title="option.title"
+                  type="button"
+                  @click="updateServiceTierMode(option.value)"
+                >
+                  {{ option.label }}
+                </button>
+              </div>
+              <i
+                v-if="serviceTierModeUpdating"
+                class="fas fa-spinner fa-spin text-xs text-gray-500"
+              />
+            </div>
+          </div>
+
           <!-- 总体统计卡片 -->
           <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
             <!-- 请求统计卡片 -->
@@ -335,10 +379,49 @@ const props = defineProps({
   apiKey: {
     type: Object,
     required: true
+  },
+  serviceTierModeUpdating: {
+    type: Boolean,
+    default: false
   }
 })
 
-const emit = defineEmits(['close', 'open-timeline'])
+const emit = defineEmits(['close', 'open-timeline', 'update-service-tier'])
+
+const serviceTierModeOptions = [
+  {
+    value: 'unchanged',
+    label: '不改变',
+    title: '保留请求原有的 service_tier',
+    activeClass: 'bg-slate-200 text-slate-800 dark:bg-slate-600 dark:text-white'
+  },
+  {
+    value: 'force_priority',
+    label: '强制增加',
+    title: '强制设置 service_tier 为 priority',
+    activeClass: 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200'
+  },
+  {
+    value: 'remove',
+    label: '移除',
+    title: '删除请求中的 service_tier',
+    activeClass: 'bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-200'
+  }
+]
+
+const serviceTierMode = computed(() => {
+  if (
+    serviceTierModeOptions.some(
+      (option) => option.value === props.apiKey?.openAIResponsesServiceTierMode
+    )
+  ) {
+    return props.apiKey.openAIResponsesServiceTierMode
+  }
+  return props.apiKey?.removeOpenAIResponsesServiceTier === true ||
+    props.apiKey?.removeOpenAIResponsesServiceTier === 'true'
+    ? 'remove'
+    : 'unchanged'
+})
 
 // 计算属性
 const totalRequests = computed(() => props.apiKey.usage?.total?.requests || 0)
@@ -435,5 +518,10 @@ const close = () => {
 
 const openTimeline = () => {
   emit('open-timeline', props.apiKey?.id)
+}
+
+const updateServiceTierMode = (mode) => {
+  if (props.serviceTierModeUpdating || serviceTierMode.value === mode) return
+  emit('update-service-tier', props.apiKey, mode)
 }
 </script>
