@@ -58,6 +58,13 @@ jest.mock('../src/services/apiKeyService', () => ({
   recordUsage: jest.fn()
 }))
 
+jest.mock('../src/services/modelService', () => ({
+  getAllModels: jest.fn(() => [
+    { id: 'gpt-5', object: 'model', created: 1, owned_by: 'openai' },
+    { id: 'gpt-5-codex', object: 'model', created: 1, owned_by: 'openai' }
+  ])
+}))
+
 jest.mock('../src/models/redis', () => ({
   getUsageStats: jest.fn()
 }))
@@ -165,6 +172,7 @@ function createRes() {
 describe('openai responses payload toggles', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    apiKeyService.hasPermission.mockReturnValue(true)
 
     unifiedOpenAIScheduler.selectAccountForApiKey.mockResolvedValue({
       accountId: 'resp-1',
@@ -179,6 +187,45 @@ describe('openai responses payload toggles', () => {
 
     openaiResponsesRelayService.handleRequest.mockResolvedValue({ ok: true })
     openaiAccountService.decrypt.mockReturnValue('decrypted-token')
+  })
+
+  test('returns the OpenAI-compatible model list for Responses base URLs', async () => {
+    const req = createReq()
+    const res = createRes()
+
+    await openaiRoutes.handleModels(req, res)
+
+    expect(res.payload).toEqual({
+      object: 'list',
+      data: [
+        { id: 'gpt-5', object: 'model', created: 1, owned_by: 'openai' },
+        { id: 'gpt-5-codex', object: 'model', created: 1, owned_by: 'openai' }
+      ]
+    })
+  })
+
+  test('filters restricted models from the Responses model list', async () => {
+    const req = createReq({
+      apiKeyOverrides: {
+        enableModelRestriction: true,
+        restrictedModels: ['gpt-5']
+      }
+    })
+    const res = createRes()
+
+    await openaiRoutes.handleModels(req, res)
+
+    expect(res.payload.data.map((model) => model.id)).toEqual(['gpt-5-codex'])
+  })
+
+  test('requires OpenAI permission for the Responses model list', async () => {
+    apiKeyService.hasPermission.mockReturnValue(false)
+    const res = createRes()
+
+    await openaiRoutes.handleModels(createReq(), res)
+
+    expect(res.status).toHaveBeenCalledWith(403)
+    expect(res.payload.error.code).toBe('permission_denied')
   })
 
   test('keeps standard responses payload unchanged for openai-responses when both toggles are off', async () => {

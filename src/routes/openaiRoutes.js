@@ -9,6 +9,7 @@ const openaiAccountService = require('../services/account/openaiAccountService')
 const openaiResponsesAccountService = require('../services/account/openaiResponsesAccountService')
 const openaiResponsesRelayService = require('../services/relay/openaiResponsesRelayService')
 const apiKeyService = require('../services/apiKeyService')
+const modelService = require('../services/modelService')
 const redis = require('../models/redis')
 const crypto = require('crypto')
 const ProxyHelper = require('../utils/proxyHelper')
@@ -986,11 +987,46 @@ const handleResponses = async (req, res) => {
   }
 }
 
-// 注册两个路由路径，都使用相同的处理函数
+const handleModels = async (req, res) => {
+  try {
+    const apiKeyData = req.apiKey || {}
+    if (!checkOpenAIPermissions(apiKeyData)) {
+      return res.status(403).json({
+        error: {
+          message: 'This API key does not have permission to access OpenAI',
+          type: 'permission_denied',
+          code: 'permission_denied'
+        }
+      })
+    }
+
+    let models = modelService.getAllModels()
+    if (apiKeyData.enableModelRestriction && apiKeyData.restrictedModels?.length > 0) {
+      models = models.filter((model) => !apiKeyData.restrictedModels.includes(model.id))
+    }
+
+    return res.json({
+      object: 'list',
+      data: models
+    })
+  } catch (error) {
+    logger.error('❌ OpenAI models list error:', error)
+    return res.status(500).json({
+      error: {
+        message: 'Failed to retrieve models',
+        type: 'api_error'
+      }
+    })
+  }
+}
+
+// Responses API and model-list aliases share the /openai base URL.
 router.post('/responses', authenticateApiKey, handleResponses)
 router.post('/v1/responses', authenticateApiKey, handleResponses)
 router.post('/responses/compact', authenticateApiKey, handleResponses)
 router.post('/v1/responses/compact', authenticateApiKey, handleResponses)
+router.get('/models', authenticateApiKey, handleModels)
+router.get('/v1/models', authenticateApiKey, handleModels)
 
 // 使用情况统计端点
 router.get('/usage', authenticateApiKey, async (req, res) => {
@@ -1058,4 +1094,5 @@ router.get('/key-info', authenticateApiKey, async (req, res) => {
 
 module.exports = router
 module.exports.handleResponses = handleResponses
+module.exports.handleModels = handleModels
 module.exports.CODEX_CLI_INSTRUCTIONS = CODEX_CLI_INSTRUCTIONS
