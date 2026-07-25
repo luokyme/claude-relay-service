@@ -6,11 +6,13 @@ const logger = require('../../utils/logger')
 const CostCalculator = require('../../utils/costCalculator')
 const config = require('../../../config/config')
 const requestBodyRuleService = require('../../services/requestBodyRuleService')
+const { OPENAI_RESPONSES_SERVICE_TIER_MODES } = require('../../utils/openAIResponsesServiceTier')
 
 const router = express.Router()
 
 // 有效的权限值列表
 const VALID_PERMISSIONS = ['claude', 'gemini', 'openai', 'droid']
+const VALID_OPENAI_RESPONSES_SERVICE_TIER_MODES = Object.values(OPENAI_RESPONSES_SERVICE_TIER_MODES)
 
 /**
  * 验证权限数组格式
@@ -1498,6 +1500,7 @@ router.post('/api-keys', authenticateAdmin, async (req, res) => {
       enableOpenAIResponsesCodexAdaptation,
       enableOpenAIResponsesPayloadRules,
       removeOpenAIResponsesServiceTier,
+      openAIResponsesServiceTierMode,
       openaiResponsesPayloadRules
     } = req.body
 
@@ -1653,6 +1656,14 @@ router.post('/api-keys', authenticateAdmin, async (req, res) => {
     ) {
       return res.status(400).json({ error: 'removeOpenAIResponsesServiceTier must be a boolean' })
     }
+    if (
+      openAIResponsesServiceTierMode !== undefined &&
+      !VALID_OPENAI_RESPONSES_SERVICE_TIER_MODES.includes(openAIResponsesServiceTierMode)
+    ) {
+      return res.status(400).json({
+        error: `openAIResponsesServiceTierMode must be one of: ${VALID_OPENAI_RESPONSES_SERVICE_TIER_MODES.join(', ')}`
+      })
+    }
 
     const payloadRulesValidation = requestBodyRuleService.validateAndNormalizeRules(
       openaiResponsesPayloadRules
@@ -1722,6 +1733,7 @@ router.post('/api-keys', authenticateAdmin, async (req, res) => {
         enableOpenAIResponsesPayloadRules !== undefined ? enableOpenAIResponsesPayloadRules : false,
       removeOpenAIResponsesServiceTier:
         removeOpenAIResponsesServiceTier !== undefined ? removeOpenAIResponsesServiceTier : false,
+      openAIResponsesServiceTierMode,
       openaiResponsesPayloadRules: payloadRulesValidation.rules
     })
 
@@ -2135,6 +2147,7 @@ router.put('/api-keys/:keyId', authenticateAdmin, async (req, res) => {
       enableOpenAIResponsesCodexAdaptation,
       enableOpenAIResponsesPayloadRules,
       removeOpenAIResponsesServiceTier,
+      openAIResponsesServiceTierMode,
       openaiResponsesPayloadRules
     } = req.body
 
@@ -2353,6 +2366,20 @@ router.put('/api-keys/:keyId', authenticateAdmin, async (req, res) => {
         return res.status(400).json({ error: 'removeOpenAIResponsesServiceTier must be a boolean' })
       }
       updates.removeOpenAIResponsesServiceTier = removeOpenAIResponsesServiceTier
+      if (openAIResponsesServiceTierMode === undefined) {
+        updates.openAIResponsesServiceTierMode = removeOpenAIResponsesServiceTier
+          ? OPENAI_RESPONSES_SERVICE_TIER_MODES.REMOVE
+          : OPENAI_RESPONSES_SERVICE_TIER_MODES.UNCHANGED
+      }
+    }
+
+    if (openAIResponsesServiceTierMode !== undefined) {
+      if (!VALID_OPENAI_RESPONSES_SERVICE_TIER_MODES.includes(openAIResponsesServiceTierMode)) {
+        return res.status(400).json({
+          error: `openAIResponsesServiceTierMode must be one of: ${VALID_OPENAI_RESPONSES_SERVICE_TIER_MODES.join(', ')}`
+        })
+      }
+      updates.openAIResponsesServiceTierMode = openAIResponsesServiceTierMode
     }
 
     if (openaiResponsesPayloadRules !== undefined) {

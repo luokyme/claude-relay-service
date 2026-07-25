@@ -328,6 +328,30 @@ describe('openai responses payload toggles', () => {
     )
   })
 
+  test('forces priority service_tier when the API key service tier mode requests it', async () => {
+    const req = createReq({
+      body: {
+        model: 'gpt-5',
+        prompt_cache_key: 'force-service-tier-key',
+        stream: false
+      },
+      apiKeyOverrides: {
+        enableOpenAIResponsesCodexAdaptation: false,
+        openAIResponsesServiceTierMode: 'force_priority'
+      }
+    })
+
+    await openaiRoutes.handleResponses(req, createRes())
+
+    expect(req.body.service_tier).toBe('priority')
+    expect(req._serviceTier).toBe('priority')
+    expect(unifiedOpenAIScheduler.selectAccountForApiKey).toHaveBeenCalledWith(
+      req.apiKey,
+      createHash('force-service-tier-key'),
+      'gpt-5'
+    )
+  })
+
   test('normalizes dated gpt-5 models only for scheduling and upstream openai requests when adaptation is off', async () => {
     unifiedOpenAIScheduler.selectAccountForApiKey.mockResolvedValue({
       accountId: 'openai-1',

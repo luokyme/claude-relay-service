@@ -1,6 +1,7 @@
 const Redis = require('ioredis')
 const config = require('../../config/config')
 const logger = require('../utils/logger')
+const { normalizeOpenAIResponsesServiceTierMode } = require('../utils/openAIResponsesServiceTier')
 
 // 时区辅助函数
 // 注意：这个函数的目的是获取某个时间点在目标时区的"本地"表示
@@ -797,6 +798,10 @@ class RedisClient {
     if (parsed.removeOpenAIResponsesServiceTier === undefined) {
       parsed.removeOpenAIResponsesServiceTier = false
     }
+    parsed.openAIResponsesServiceTierMode = normalizeOpenAIResponsesServiceTierMode(
+      parsed.openAIResponsesServiceTierMode,
+      parsed.removeOpenAIResponsesServiceTier
+    )
 
     // 数字字段
     const numFields = [

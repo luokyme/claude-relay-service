@@ -8,6 +8,7 @@ const requestDetailService = require('./requestDetailService')
 const { isClaudeFamilyModel } = require('../utils/modelHelper')
 const { finalizeRequestDetailMeta } = require('../utils/requestDetailHelper')
 const requestBodyRuleService = require('./requestBodyRuleService')
+const { normalizeOpenAIResponsesServiceTierMode } = require('../utils/openAIResponsesServiceTier')
 
 const ACCOUNT_TYPE_CONFIG = {
   claude: { prefix: 'claude:account:' },
@@ -207,6 +208,7 @@ class ApiKeyService {
       enableOpenAIResponsesCodexAdaptation = true,
       enableOpenAIResponsesPayloadRules = false,
       removeOpenAIResponsesServiceTier = false,
+      openAIResponsesServiceTierMode,
       openaiResponsesPayloadRules = []
     } = options
 
@@ -216,6 +218,10 @@ class ApiKeyService {
     if (!payloadRulesValidation.valid) {
       throw new Error(payloadRulesValidation.error)
     }
+    const normalizedServiceTierMode = normalizeOpenAIResponsesServiceTierMode(
+      openAIResponsesServiceTierMode,
+      removeOpenAIResponsesServiceTier
+    )
 
     // 生成简单的API Key (64字符十六进制)
     const apiKey = `${this.prefix}${this._generateSecretKey()}`
@@ -269,7 +275,8 @@ class ApiKeyService {
       weeklyResetHour: String(weeklyResetHour || 0), // 周费用重置时 (0-23)
       enableOpenAIResponsesCodexAdaptation: String(enableOpenAIResponsesCodexAdaptation !== false),
       enableOpenAIResponsesPayloadRules: String(enableOpenAIResponsesPayloadRules === true),
-      removeOpenAIResponsesServiceTier: String(removeOpenAIResponsesServiceTier === true),
+      removeOpenAIResponsesServiceTier: String(normalizedServiceTierMode === 'remove'),
+      openAIResponsesServiceTierMode: normalizedServiceTierMode,
       openaiResponsesPayloadRules: JSON.stringify(payloadRulesValidation.rules)
     }
 
@@ -349,6 +356,10 @@ class ApiKeyService {
       removeOpenAIResponsesServiceTier: parseBooleanWithDefault(
         keyData.removeOpenAIResponsesServiceTier,
         false
+      ),
+      openAIResponsesServiceTierMode: normalizeOpenAIResponsesServiceTierMode(
+        keyData.openAIResponsesServiceTierMode,
+        keyData.removeOpenAIResponsesServiceTier
       ),
       openaiResponsesPayloadRules: parseOpenAIResponsesPayloadRules(
         keyData.openaiResponsesPayloadRules
@@ -511,6 +522,10 @@ class ApiKeyService {
         keyData.removeOpenAIResponsesServiceTier,
         false
       )
+      const openAIResponsesServiceTierMode = normalizeOpenAIResponsesServiceTierMode(
+        keyData.openAIResponsesServiceTierMode,
+        removeOpenAIResponsesServiceTier
+      )
 
       return {
         valid: true,
@@ -550,6 +565,7 @@ class ApiKeyService {
           enableOpenAIResponsesCodexAdaptation,
           enableOpenAIResponsesPayloadRules,
           removeOpenAIResponsesServiceTier,
+          openAIResponsesServiceTierMode,
           openaiResponsesPayloadRules
         }
       }
@@ -656,6 +672,10 @@ class ApiKeyService {
         keyData.removeOpenAIResponsesServiceTier,
         false
       )
+      const openAIResponsesServiceTierMode = normalizeOpenAIResponsesServiceTierMode(
+        keyData.openAIResponsesServiceTierMode,
+        removeOpenAIResponsesServiceTier
+      )
 
       return {
         valid: true,
@@ -704,6 +724,7 @@ class ApiKeyService {
           enableOpenAIResponsesCodexAdaptation,
           enableOpenAIResponsesPayloadRules,
           removeOpenAIResponsesServiceTier,
+          openAIResponsesServiceTierMode,
           openaiResponsesPayloadRules
         }
       }
@@ -914,6 +935,10 @@ class ApiKeyService {
         key.removeOpenAIResponsesServiceTier = parseBooleanWithDefault(
           key.removeOpenAIResponsesServiceTier,
           false
+        )
+        key.openAIResponsesServiceTierMode = normalizeOpenAIResponsesServiceTierMode(
+          key.openAIResponsesServiceTierMode,
+          key.removeOpenAIResponsesServiceTier
         )
         key.permissions = normalizePermissions(key.permissions)
         key.dailyCostLimit = parseFloat(key.dailyCostLimit || 0)
@@ -1183,6 +1208,10 @@ class ApiKeyService {
           key.removeOpenAIResponsesServiceTier,
           false
         )
+        key.openAIResponsesServiceTierMode = normalizeOpenAIResponsesServiceTierMode(
+          key.openAIResponsesServiceTierMode,
+          key.removeOpenAIResponsesServiceTier
+        )
         key.isActivated = key.isActivated === 'true' || key.isActivated === true
         key.permissions = key.permissions || 'all'
         key.activationUnit = key.activationUnit || 'days'
@@ -1387,6 +1416,7 @@ class ApiKeyService {
         'enableOpenAIResponsesCodexAdaptation',
         'enableOpenAIResponsesPayloadRules',
         'removeOpenAIResponsesServiceTier',
+        'openAIResponsesServiceTierMode',
         'openaiResponsesPayloadRules'
       ]
       const updatedData = { ...keyData }
@@ -1422,6 +1452,12 @@ class ApiKeyService {
             updatedData[field] = (value !== null && value !== undefined ? value : '').toString()
           }
         }
+      }
+
+      if (updates.openAIResponsesServiceTierMode !== undefined) {
+        updatedData.removeOpenAIResponsesServiceTier = String(
+          updates.openAIResponsesServiceTierMode === 'remove'
+        )
       }
 
       updatedData.updatedAt = new Date().toISOString()
@@ -2492,6 +2528,10 @@ class ApiKeyService {
         removeOpenAIResponsesServiceTier: parseBooleanWithDefault(
           keyData.removeOpenAIResponsesServiceTier,
           false
+        ),
+        openAIResponsesServiceTierMode: normalizeOpenAIResponsesServiceTierMode(
+          keyData.openAIResponsesServiceTierMode,
+          keyData.removeOpenAIResponsesServiceTier
         ),
         openaiResponsesPayloadRules: parseOpenAIResponsesPayloadRules(
           keyData.openaiResponsesPayloadRules

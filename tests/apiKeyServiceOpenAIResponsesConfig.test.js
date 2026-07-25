@@ -89,11 +89,13 @@ describe('apiKeyService openai responses config', () => {
     expect(storedKeyData.enableOpenAIResponsesCodexAdaptation).toBe('true')
     expect(storedKeyData.enableOpenAIResponsesPayloadRules).toBe('false')
     expect(storedKeyData.removeOpenAIResponsesServiceTier).toBe('false')
+    expect(storedKeyData.openAIResponsesServiceTierMode).toBe('unchanged')
     expect(storedKeyData.openaiResponsesPayloadRules).toBe('[]')
 
     expect(result.enableOpenAIResponsesCodexAdaptation).toBe(true)
     expect(result.enableOpenAIResponsesPayloadRules).toBe(false)
     expect(result.removeOpenAIResponsesServiceTier).toBe(false)
+    expect(result.openAIResponsesServiceTierMode).toBe('unchanged')
     expect(result.openaiResponsesPayloadRules).toEqual([])
   })
 
@@ -110,14 +112,15 @@ describe('apiKeyService openai responses config', () => {
     await apiKeyService.updateApiKey('key-1', {
       enableOpenAIResponsesCodexAdaptation: false,
       enableOpenAIResponsesPayloadRules: true,
-      removeOpenAIResponsesServiceTier: true,
+      openAIResponsesServiceTierMode: 'force_priority',
       openaiResponsesPayloadRules: [{ path: 'model', valueType: 'string', value: 'gpt-5' }]
     })
 
     const [, storedKeyData] = redis.setApiKey.mock.calls[0]
     expect(storedKeyData.enableOpenAIResponsesCodexAdaptation).toBe('false')
     expect(storedKeyData.enableOpenAIResponsesPayloadRules).toBe('true')
-    expect(storedKeyData.removeOpenAIResponsesServiceTier).toBe('true')
+    expect(storedKeyData.removeOpenAIResponsesServiceTier).toBe('false')
+    expect(storedKeyData.openAIResponsesServiceTierMode).toBe('force_priority')
     expect(storedKeyData.openaiResponsesPayloadRules).toBe(
       JSON.stringify([{ path: 'model', valueType: 'string', value: 'gpt-5' }])
     )
@@ -160,6 +163,7 @@ describe('apiKeyService openai responses config', () => {
     expect(result.enableOpenAIResponsesCodexAdaptation).toBe(false)
     expect(result.enableOpenAIResponsesPayloadRules).toBe(true)
     expect(result.removeOpenAIResponsesServiceTier).toBe(true)
+    expect(result.openAIResponsesServiceTierMode).toBe('remove')
     expect(result.openaiResponsesPayloadRules).toEqual([
       { path: 'model', valueType: 'string', value: 'gpt-5' }
     ])

@@ -20,6 +20,10 @@ const {
   extractOpenAICacheReadTokens
 } = require('../utils/requestDetailHelper')
 const requestBodyRuleService = require('../services/requestBodyRuleService')
+const {
+  OPENAI_RESPONSES_SERVICE_TIER_MODES,
+  normalizeOpenAIResponsesServiceTierMode
+} = require('../utils/openAIResponsesServiceTier')
 
 // Codex CLI 系统提示词（非 Codex CLI 客户端请求时注入，统一端点也使用）
 const CODEX_CLI_INSTRUCTIONS =
@@ -349,8 +353,17 @@ const handleResponses = async (req, res) => {
         logger.info('🧩 Standard Responses request applied API key payload rules')
       }
 
-      if (
-        apiKeyData.removeOpenAIResponsesServiceTier === true &&
+      const serviceTierMode = normalizeOpenAIResponsesServiceTierMode(
+        apiKeyData.openAIResponsesServiceTierMode,
+        apiKeyData.removeOpenAIResponsesServiceTier
+      )
+      if (serviceTierMode === OPENAI_RESPONSES_SERVICE_TIER_MODES.FORCE_PRIORITY) {
+        req.body.service_tier = 'priority'
+        logger.info(
+          '⚡ Standard Responses request forced service_tier to priority by API key setting'
+        )
+      } else if (
+        serviceTierMode === OPENAI_RESPONSES_SERVICE_TIER_MODES.REMOVE &&
         req.body?.service_tier !== undefined
       ) {
         delete req.body.service_tier

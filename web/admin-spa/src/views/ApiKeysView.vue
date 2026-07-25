@@ -335,7 +335,7 @@
                     </th>
                     <th
                       class="px-3 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300"
-                      title="控制 OpenAI Responses 请求是否移除 service_tier 字段"
+                      title="控制 OpenAI Responses 请求的 service_tier：不改变、强制增加 priority 或移除"
                     >
                       Fast/Priority
                     </th>
@@ -603,48 +603,33 @@
                           >
                         </div>
                       </td>
-                      <!-- Fast/Priority service_tier 开关 -->
+                      <!-- Fast/Priority service_tier 三态开关 -->
                       <td class="whitespace-nowrap px-3 py-3">
-                        <button
-                          :aria-pressed="shouldRemoveServiceTier(key)"
-                          :class="[
-                            shouldRemoveServiceTier(key)
-                              ? 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800/70 dark:bg-rose-900/30 dark:text-rose-300'
-                              : 'border-gray-200 bg-gray-50 text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300',
-                            'inline-flex items-center gap-2 rounded-full border px-2.5 py-1.5 text-xs font-medium transition-colors hover:bg-opacity-80 disabled:cursor-not-allowed disabled:opacity-60'
-                          ]"
-                          :disabled="isServiceTierRemoveUpdating(key.id)"
-                          :title="
-                            shouldRemoveServiceTier(key)
-                              ? '当前会移除 service_tier，点击切换为默认'
-                              : '当前保留 service_tier，点击切换为移除 Fast/Priority'
-                          "
-                          type="button"
-                          @click="toggleServiceTierRemove(key)"
+                        <div
+                          class="inline-flex overflow-hidden rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"
                         >
-                          <span
+                          <button
+                            v-for="option in serviceTierModeOptions"
+                            :key="option.value"
+                            :aria-pressed="getServiceTierMode(key) === option.value"
                             :class="[
-                              shouldRemoveServiceTier(key)
-                                ? 'bg-rose-500'
-                                : 'bg-gray-300 dark:bg-gray-600',
-                              'relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors'
+                              getServiceTierMode(key) === option.value
+                                ? option.activeClass
+                                : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700',
+                              'border-r border-gray-200 px-2 py-1.5 text-xs font-medium transition-colors last:border-r-0 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700'
                             ]"
+                            :disabled="isServiceTierModeUpdating(key.id)"
+                            :title="option.title"
+                            type="button"
+                            @click="setServiceTierMode(key, option.value)"
                           >
-                            <span
-                              :class="[
-                                shouldRemoveServiceTier(key) ? 'translate-x-4' : 'translate-x-0',
-                                'absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform'
-                              ]"
-                            />
-                          </span>
-                          <span>
-                            {{ shouldRemoveServiceTier(key) ? '移除' : '默认' }}
-                          </span>
+                            {{ option.label }}
+                          </button>
                           <i
-                            v-if="isServiceTierRemoveUpdating(key.id)"
-                            class="fas fa-spinner fa-spin text-[10px]"
+                            v-if="isServiceTierModeUpdating(key.id)"
+                            class="fas fa-spinner fa-spin self-center px-2 text-[10px] text-gray-500"
                           />
-                        </button>
+                        </div>
                       </td>
                       <td class="whitespace-nowrap px-3 py-3">
                         <span
@@ -2251,7 +2236,27 @@ const isIndeterminate = ref(false)
 const showCheckboxes = ref(false)
 const apiKeysLoading = ref(false)
 const apiKeyStatsTimeRange = ref('today')
-const serviceTierRemoveUpdatingIds = ref(new Set())
+const serviceTierModeUpdatingIds = ref(new Set())
+const serviceTierModeOptions = [
+  {
+    value: 'unchanged',
+    label: '不改变',
+    title: '保留请求原有的 service_tier',
+    activeClass: 'bg-slate-200 text-slate-800 dark:bg-slate-600 dark:text-white'
+  },
+  {
+    value: 'force_priority',
+    label: '强制增加',
+    title: '强制设置 service_tier 为 priority',
+    activeClass: 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200'
+  },
+  {
+    value: 'remove',
+    label: '移除',
+    title: '删除请求中的 service_tier',
+    activeClass: 'bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-200'
+  }
+]
 
 // 全局日期筛选器
 const globalDateFilter = reactive({
@@ -3966,46 +3971,54 @@ const getApiKeyActions = (key) => {
   return actions
 }
 
-const shouldRemoveServiceTier = (key) =>
-  key?.removeOpenAIResponsesServiceTier === true || key?.removeOpenAIResponsesServiceTier === 'true'
+const getServiceTierMode = (key) => {
+  if (
+    serviceTierModeOptions.some((option) => option.value === key?.openAIResponsesServiceTierMode)
+  ) {
+    return key.openAIResponsesServiceTierMode
+  }
+  return key?.removeOpenAIResponsesServiceTier === true ||
+    key?.removeOpenAIResponsesServiceTier === 'true'
+    ? 'remove'
+    : 'unchanged'
+}
 
-const isServiceTierRemoveUpdating = (keyId) => serviceTierRemoveUpdatingIds.value.has(keyId)
+const isServiceTierModeUpdating = (keyId) => serviceTierModeUpdatingIds.value.has(keyId)
 
-const setServiceTierRemoveUpdating = (keyId, updating) => {
-  const nextIds = new Set(serviceTierRemoveUpdatingIds.value)
+const setServiceTierModeUpdating = (keyId, updating) => {
+  const nextIds = new Set(serviceTierModeUpdatingIds.value)
   if (updating) {
     nextIds.add(keyId)
   } else {
     nextIds.delete(keyId)
   }
-  serviceTierRemoveUpdatingIds.value = nextIds
+  serviceTierModeUpdatingIds.value = nextIds
 }
 
-const toggleServiceTierRemove = async (key) => {
-  if (!key?.id || isServiceTierRemoveUpdating(key.id)) return
+const setServiceTierMode = async (key, mode) => {
+  if (!key?.id || isServiceTierModeUpdating(key.id) || getServiceTierMode(key) === mode) return
 
-  const currentlyRemoving = shouldRemoveServiceTier(key)
-  const nextRemoveServiceTier = !currentlyRemoving
-
-  setServiceTierRemoveUpdating(key.id, true)
+  setServiceTierModeUpdating(key.id, true)
   try {
     const data = await httpApis.updateApiKeyApi(key.id, {
-      removeOpenAIResponsesServiceTier: nextRemoveServiceTier
+      openAIResponsesServiceTierMode: mode
     })
 
     if (data.success) {
       const localKey = apiKeys.value.find((item) => item.id === key.id)
       if (localKey) {
-        localKey.removeOpenAIResponsesServiceTier = nextRemoveServiceTier
+        localKey.openAIResponsesServiceTierMode = mode
+        localKey.removeOpenAIResponsesServiceTier = mode === 'remove'
       }
-      showToast(`service_tier 字段已切换为${currentlyRemoving ? '默认' : '移除'}`, 'success')
+      const label = serviceTierModeOptions.find((option) => option.value === mode)?.label || mode
+      showToast(`service_tier 已切换为${label}`, 'success')
     } else {
       showToast(data.message || '操作失败', 'error')
     }
   } catch (error) {
     showToast('操作失败', 'error')
   } finally {
-    setServiceTierRemoveUpdating(key.id, false)
+    setServiceTierModeUpdating(key.id, false)
   }
 }
 

@@ -32,6 +32,7 @@ describe('redis api key parsing', () => {
     expect(parsed.enableOpenAIResponsesCodexAdaptation).toBe(false)
     expect(parsed.enableOpenAIResponsesPayloadRules).toBe(true)
     expect(parsed.removeOpenAIResponsesServiceTier).toBe(true)
+    expect(parsed.openAIResponsesServiceTierMode).toBe('remove')
     expect(parsed.openaiResponsesPayloadRules).toEqual([
       { path: 'model', valueType: 'string', value: 'gpt-5' }
     ])
@@ -43,6 +44,16 @@ describe('redis api key parsing', () => {
     expect(parsed.enableOpenAIResponsesCodexAdaptation).toBe(true)
     expect(parsed.enableOpenAIResponsesPayloadRules).toBe(false)
     expect(parsed.removeOpenAIResponsesServiceTier).toBe(false)
+    expect(parsed.openAIResponsesServiceTierMode).toBe('unchanged')
     expect(parsed.openaiResponsesPayloadRules).toEqual([])
+  })
+
+  test('prefers the explicit three-state service tier mode', () => {
+    const parsed = redis._parseApiKeyData({
+      removeOpenAIResponsesServiceTier: 'true',
+      openAIResponsesServiceTierMode: 'force_priority'
+    })
+
+    expect(parsed.openAIResponsesServiceTierMode).toBe('force_priority')
   })
 })
